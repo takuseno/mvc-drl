@@ -1,12 +1,4 @@
-class Controller:
-    def step(self, obs, reward, done):
-        raise NotImplementedError('implement step function')
-
-    def should_update(self):
-        raise NotImplementedError('implement should_update function')
-
-    def update(self):
-        raise NotImplementedError('implement update function')
+from mvc.controllers.base_controller import BaseController
 
 
 class PPOController(Controller):
