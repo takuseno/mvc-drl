@@ -5,9 +5,5 @@ jobs:
       - image: circleci/python:3.6.4
     steps:
       - checkout
-      - run:
-        command: |
-          sudo pip install -r requirements.txt
-      - run:
-        command: |
-          ./test.sh
+      - run: sudo pip install -r requirements.txt
+      - run: ./test.sh
