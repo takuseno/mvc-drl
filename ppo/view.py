@@ -6,3 +6,6 @@ class View:
         if self.controller.should_update():
             self.controller.update()
         return self.controller.step(obs, reward, done)
+
+    def stop_episode(self, obs, reward):
+        self.controller.stop_episode(obs, reward)
