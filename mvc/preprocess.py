@@ -31,8 +31,10 @@ def compute_gae(bootstrap_value, rewards, values, terminals, gamma, lam):
     if len(rewards.shape) == 2:
         assert isinstance(bootstrap_value, np.ndarray),\
             'bootstrap_value must be ndarray'
+        assert bootstrap_value.shape[0] == rewards.shape[1],\
+            'bootstrap_value must have column length of rewards'
 
-    values = np.vstack([values, [bootstrap_value]])
+    values = np.concatenate((values, [bootstrap_value]), axis=0)
     # compute delta
     deltas = []
     for i in reversed(range(rewards.shape[0])):
@@ -41,7 +43,7 @@ def compute_gae(bootstrap_value, rewards, values, terminals, gamma, lam):
         deltas.append(delta)
     deltas = np.array(list(reversed(deltas)))
     # compute gae
-    A = deltas[-1,:]
+    A = deltas[-1]
     advantages = [A]
     for i in reversed(range(deltas.shape[0] - 1)):
         A = deltas[i] + (1.0 - terminals[i]) * gamma * lam * A
