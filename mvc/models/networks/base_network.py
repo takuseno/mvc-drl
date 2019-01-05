@@ -1,8 +1,15 @@
+from mvc.action import Action
+
+
 class Network:
     def infer(self, **kwargs):
         for key in self._infer_arguments():
             assert key in kwargs, key + ' does not exist in the arguments'
-        return self._infer(**kwargs)
+        action = self._infer(**kwargs)
+
+        assert isinstance(action, Action), 'action should be instance of Action'
+
+        return action
 
     def update(self, **kwargs):
         for key in self._update_arguments():

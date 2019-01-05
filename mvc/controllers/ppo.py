@@ -1,8 +1,11 @@
 from mvc.controllers.base_controller import BaseController
+from mvc.models.networks.base_network import BaseNetwork
 
 
 class PPOController(Controller):
     def __init__(self, network, rollout, time_horizon, gamma, lam)
+        assert isinstance(network, BaseNetwork)
+
         self.network = network
         self.rollout = rollout
         self.time_horizon = time_horizon
@@ -11,10 +14,11 @@ class PPOController(Controller):
 
     def step(self, obs, reward, done):
         # infer action, policy, value
-        action, log_prob, value = self.network.infer({'obs_t': obs})
+        action = self.network.infer({'obs_t': obs})
         # store trajectory
-        self.rollout.add(obs, action, reward, value, log_prob, done)
-        return action
+        self.rollout.add(obs, action.action, reward,
+                         action.value, action.log_prob, done)
+        return action.action
 
     def should_update(self):
         return self.rollout.size() == self.time_horizon

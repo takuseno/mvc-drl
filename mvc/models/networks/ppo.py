@@ -1,4 +1,5 @@
 from mvc.models.networks.base_network import BaseNetwork
+from mvc.action import Action
 
 
 class PPONetwork(BaseNetwork):
@@ -19,7 +20,7 @@ class PPONetwork(BaseNetwork):
         }
         sess = tf.get_default_session()
         ops = [self.action, self.log_policy, self.step_value]
-        return sess.run(ops, feed_dict=feed_dict)
+        return Action(*sess.run(ops, feed_dict=feed_dict))
 
     def _update(self, **kwargs):
         feed_dict = {
