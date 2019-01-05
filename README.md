@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/takuseno/well-tested-drl.svg?style=svg&circle-token=a53a3796ed3591f9f3bd411807367df4a23483c0)](https://circleci.com/gh/takuseno/well-tested-drl)
+[![CircleCI](https://circleci.com/gh/takuseno/mvc-drl.svg?style=svg&circle-token=a53a3796ed3591f9f3bd411807367df4a23483c0)](https://circleci.com/gh/takuseno/mvc-drl)
 
 # mvc-drl
 Clean deep reinforcement learning codes based on Web MVC architecture with complete unit tests
