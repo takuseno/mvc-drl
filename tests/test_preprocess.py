@@ -33,9 +33,9 @@ class ComputeReturnsTest(unittest.TestCase):
 
     def test_compute_returns_shape_does_not_match_error(self):
         with pytest.raises(AssertionError) as excinfo:
-            compute_returns(0.0, range(5), np.arange(6), 0.9)
+            compute_returns(0.0, np.arange(5), np.arange(6), 0.9)
         with pytest.raises(AssertionError) as excinfo:
-            compute_returns(0.0, range(6), np.arange(5), 0.9)
+            compute_returns(0.0, np.arange(6), np.arange(5), 0.9)
         with pytest.raises(AssertionError) as excinfo:
             compute_returns(np.arange(5), np.ones((6, 5)), np.ones((5, 5)), 0.9)
         with pytest.raises(AssertionError) as excinfo:
