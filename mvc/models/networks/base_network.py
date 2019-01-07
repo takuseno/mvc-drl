@@ -1,7 +1,7 @@
-from mvc.action import Action
+from mvc.actions import Action
 
 
-class Network:
+class BaseNetwork:
     def infer(self, **kwargs):
         for key in self._infer_arguments():
             assert key in kwargs, key + ' does not exist in the arguments'

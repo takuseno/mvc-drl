@@ -1,5 +1,5 @@
 from mvc.models.networks.base_network import BaseNetwork
-from mvc.action import Action
+from mvc.action_output import ActionOutput
 
 
 class PPONetwork(BaseNetwork):
@@ -20,7 +20,7 @@ class PPONetwork(BaseNetwork):
         }
         sess = tf.get_default_session()
         ops = [self.action, self.log_policy, self.step_value]
-        return Action(*sess.run(ops, feed_dict=feed_dict))
+        return ActionOutput(*sess.run(ops, feed_dict=feed_dict))
 
     def _update(self, **kwargs):
         feed_dict = {
@@ -50,13 +50,13 @@ class PPONetwork(BaseNetwork):
             train_obs_ph = self.train_obs_ph = tf.placeholder(
                 tf.float32, [batch_size] + state_shape, name='train_obs')
             returns_ph = self.returns_t = tf.placeholder(
-                tf.float32, [None], name='returns')
+                tf.float32, [batch_size], name='returns')
             advantages_ph = self.advantages_ph = tf.placeholder(
-                tf.float32, [None], name='advantages')
+                tf.float32, [batch_size], name='advantages')
             actions_ph = self.actions_ph = tf.placeholder(
                 tf.float32, [batch_size, num_actions], name='action')
             old_log_probs_ph = self.old_log_probs_ph = tf.placeholder(
-                tf.float32, [batch_size, num_actions], name='old_log_prob')
+                tf.float32, [batch_size], name='old_log_prob')
 
             # network outputs for inference
             step_dist, self.step_value = function(step_obs_ph)
