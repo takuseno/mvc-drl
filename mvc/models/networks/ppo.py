@@ -11,7 +11,7 @@ class PPONetwork(BaseNetwork):
                  time_horizon,
                  grad_clip,
                  lr):
-        self._build(function state_shape, num_envs num_actions,
+        self._build(function, state_shape, num_envs, num_actions,
                     time_horizon, grad_clip, lr)
 
     def _infer(self, **kwargs):

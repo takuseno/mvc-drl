@@ -1,15 +1,15 @@
-from mvc.actions import Action
+from mvc.action_output import ActionOutput
 
 
 class BaseNetwork:
     def infer(self, **kwargs):
         for key in self._infer_arguments():
             assert key in kwargs, key + ' does not exist in the arguments'
-        action = self._infer(**kwargs)
+        output = self._infer(**kwargs)
 
-        assert isinstance(action, Action), 'action should be instance of Action'
+        assert isinstance(output, ActionOutput), 'action should be instance of Action'
 
-        return action
+        return output
 
     def update(self, **kwargs):
         for key in self._update_arguments():
