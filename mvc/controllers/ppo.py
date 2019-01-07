@@ -1,8 +1,19 @@
+import numpy as np
+
 from mvc.controllers.base_controller import BaseController
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.models.rollout import Rollout
 from mvc.preprocess import compute_returns, compute_gae
 
+
+def shuffle_batch(batch, size):
+    indices = np.random.permutation(np.arange(size))
+    # check first not to change original data in the error case
+    for key in batch.keys():
+        assert batch[key].shape[0] == size
+    for key in batch.keys():
+        batch[key] = batch[key][indices]
+    return batch
 
 class PPOController(BaseController):
     def __init__(self, network, rollout, time_horizon, gamma, lam):
@@ -30,7 +41,7 @@ class PPOController(BaseController):
         assert self.should_update()
 
         # create batch from stored trajectories
-        batch = self._batch()
+        batch = shuffle_batch(self._batch(), self.time_horizon)
         # flush stored trajectories
         self.rollout.flush()
         # update parameter
