@@ -11,7 +11,7 @@ def make_inputs():
         'action_t': np.random.random((4, 4)),
         'reward_t': np.random.random((4,)),
         'value_t': np.random.random((4,)),
-        'log_prob_t': np.random.random((4,)),
+        'log_prob_t': np.random.random((4, 4)),
         'terminal_t': np.random.random((4,))
     }
 

@@ -16,9 +16,9 @@ class Rollout:
         assert obs_t.shape[0] == value_t.shape[0]
         assert obs_t.shape[0] == log_prob_t.shape[0]
         assert obs_t.shape[0] == terminal_t.shape[0]
+        assert log_prob_t.shape == action_t.shape
         assert len(reward_t.shape) == 1
         assert len(value_t.shape) == 1
-        assert len(log_prob_t.shape) == 1
         assert len(terminal_t.shape) == 1
 
         self.obs_t.append(obs_t)

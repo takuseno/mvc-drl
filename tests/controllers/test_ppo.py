@@ -26,7 +26,7 @@ class DummyNetwork(BaseNetwork):
 
 def make_output():
     action = np.random.random((4, 4))
-    log_prob = np.random.random((4,))
+    log_prob = np.random.random((4, 4))
     value = np.random.random((4,))
     return ActionOutput(action, log_prob, value)
 
