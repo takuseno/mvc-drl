@@ -1,6 +1,37 @@
+import tensorflow as tf
+
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.action_output import ActionOutput
 
+
+def build_value_loss(values, returns, value_factor):
+    assert len(values.shape) == 2 and values.shape[1] == 1
+    assert len(returns.shape) == 2 and returns.shape[1] == 1
+
+    with tf.variable_scope('value_loss'):
+        loss = tf.reduce_mean((returns - values) ** 2)
+        return value_factor * loss
+
+def build_entropy_loss(dist, entropy_factor):
+    with tf.variable_scope('entropy'):
+        entropy = -tf.reduce_mean(dist.entropy())
+        return entropy_factor * entropy
+
+def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
+    assert len(log_probs.shape) == 2
+    assert len(old_log_probs.shape) == 2
+    assert old_log_probs.shape[1] == log_probs.shape[1]
+    assert len(advantages.shape) == 2 and advantages.shape[1] == 1
+
+    with tf.variable_scope('policy_loss'):
+        ratio = tf.exp(log_probs - old_log_probs)
+        ratio = tf.reduce_mean(ratio, axis=1, keep_dims=True)
+        surr1 = ratio * advantages
+        surr2 = tf.clip_by_value(
+            ratio, 1.0 - epsilon, 1.0 + epsilon) * advantages
+        surr = tf.minimum(surr1, surr2)
+        loss = -tf.reduce_mean(surr)
+    return loss
 
 class PPONetwork(BaseNetwork):
     def __init__(self,
@@ -9,13 +40,14 @@ class PPONetwork(BaseNetwork):
                  num_envs,
                  num_actions,
                  time_horizon,
+                 epsilon,
                  lr,
                  grad_clip,
                  value_factor,
                  entropy_factor):
-        self._build(
-            function, state_shape, num_envs,
-            num_actions, time_horizon, grad_clip, lr)
+
+        self._build(function, state_shape, num_envs, num_actions, time_horizon,
+                    epsilon, lr, grad_clip, value_factor, entropy_factor)
 
     def _infer(self, **kwargs):
         feed_dict = {
@@ -42,6 +74,7 @@ class PPONetwork(BaseNetwork):
                num_envs,
                num_actions,
                time_horizon,
+               epsilon,
                lr,
                grad_clip,
                value_factor,
@@ -55,19 +88,19 @@ class PPONetwork(BaseNetwork):
                 tf.float32, [num_envs] + state_shape, name='step_obs')
             train_obs_ph = self.train_obs_ph = tf.placeholder(
                 tf.float32, [batch_size] + state_shape, name='train_obs')
-            returns_ph = self.returns_t = tf.placeholder(
+            returns_ph = self.returns_ph = tf.placeholder(
                 tf.float32, [batch_size], name='returns')
             advantages_ph = self.advantages_ph = tf.placeholder(
                 tf.float32, [batch_size], name='advantages')
             actions_ph = self.actions_ph = tf.placeholder(
                 tf.float32, [batch_size, num_actions], name='action')
             old_log_probs_ph = self.old_log_probs_ph = tf.placeholder(
-                tf.float32, [batch_size], name='old_log_prob')
+                tf.float32, [batch_size, num_actions], name='old_log_prob')
 
             # network outputs for inference
-            step_dist, step_values = function(step_obs_ph)
+            step_dist, step_values = function(step_obs_ph, num_actions)
             # network outputs for training
-            train_dist, train_values = function(train_obs_ph)
+            train_dist, train_values = function(train_obs_ph, num_actions)
 
             # prepare for loss calculation
             advantages = tf.reshape(advantages_ph, [-1, 1])
@@ -75,17 +108,16 @@ class PPONetwork(BaseNetwork):
             log_probs = train_dist.log_prob(actions_ph)
 
             # individual loss
-            value_loss = self._build_value_loss(train_values, returns,
-                                                value_factor)
-            policy_loss = self._build_policy_loss(log_probs, old_log_probs_ph,
-                                                  advantages, epsilon)
-            entropy_loss = self._build_entropy_loss(train_dist, entropy_factor)
+            value_loss = build_value_loss(train_values, returns, value_factor)
+            entropy_loss = build_entropy_loss(train_dist, entropy_factor)
+            policy_loss = build_policy_loss(log_probs, old_log_probs_ph,
+                                            advantages, epsilon)
             # final loss
             self.loss = value_loss + policy_loss + entropy_loss
 
             # network weights
             network_vars = tf.get_collection(
-                tf.GraphKeys.TRAINABLE_VARIABLES, scope)
+                tf.GraphKeys.TRAINABLE_VARIABLES, 'ppo')
 
             # gradients
             gradients = tf.gradients(self.loss, network_vars)
@@ -97,29 +129,8 @@ class PPONetwork(BaseNetwork):
 
             # action
             self.action = step_dist.sample(1)[0]
-            self.log_policy = step_dist.log_prob(action)
+            self.log_policy = step_dist.log_prob(self.action)
             self.value = tf.reshape(step_values, [-1])
-
-    def _build_value_loss(self, values, returns, value_factor):
-        with tf.variable_scope('value_loss'):
-            loss = tf.reduce_mean((returns - values) ** 2)
-            return value_factor * value_loss
-
-    def _build_entropy_loss(self, dist, entropy_factor):
-        with tf.variable_scope('entropy'):
-            entropy = -tf.reduce_mean(dist.entropy())
-            return entropy_factor * entropy
-
-    def _build_policy_loss(self, log_probs, old_log_probs, advantages, epsilon):
-        with tf.variable_scope('policy_loss'):
-            ratio = tf.exp(log_probs - old_log_probs)
-            ratio = tf.reduce_mean(ratio, axis=1, keep_dims=True)
-            surr1 = ratio * advantages
-            surr2 = tf.clip_by_value(
-                ratio, 1.0 - epsilon, 1.0 + epsilon) * advantages
-            surr = tf.minimum(surr1, surr2)
-            policy_loss = -tf.reduce_mean(surr)
-        return policy_loss
 
     def _infer_arguments(self):
         return ['obs_t']
