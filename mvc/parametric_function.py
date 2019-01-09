@@ -8,39 +8,75 @@ def make_fcs(fcs, inpt, activation=tf.nn.relu, w_init=None):
     out = inpt
     with tf.variable_scope('hiddens'):
         for hidden in fcs:
-            out = layers.fully_connected(out, hidden, activation_fn=activation,
-                                         weights_initializer=w_init)
+            out = tf.layers.dense(out, hidden, activation=activation,
+                                  kernel_initializer=w_init)
     return out
 
-def mlp_network(fcs,
-                inpt,
-                num_actions,
-                nenvs,
-                step_size,
-                scope):
-    input_dim = inpt.get_shape().as_list()[1] + 1
-    def w_init(scale):
-        return tf.random_normal_initializer(stddev=np.sqrt(scale / input_dim))
+def stochastic_policy_function(fcs,
+                               inpt,
+                               num_actions,
+                               share=False,
+                               w_init=None,
+                               last_w_init=None):
+    with tf.variable_scope('policy'):
+        out = make_fcs(fcs, inpt, tf.nn.tanh, w_init)
+        mean = tf.layers.dense(out, num_actions, activation=None,
+                               kernel_initializer=last_w_init, name='mean')
 
-    def func(inpt):
-        with tf.variable_scope('policy'):
-            out = make_fcs(fcs, inpt, activation=tf.nn.tanh,
-                           initializer=initializer(1.0))
-
-            policy = layers.fully_connected(out, num_actions, activation_fn=None,
-                                            weights_initializer=w_init(0.01))
+        if share_param:
+            logstd = tf.layers.dense(out, num_actions, activation=None,
+                                     kernel_initializer=last_w_init,
+                                     name='logstd')
+            std = tf.exp(logstd)
+        else:
             logstd = tf.get_variable(name='logstd', shape=[1, num_actions],
                                      initializer=tf.zeros_initializer())
-
             std = tf.zeros_like(policy) + tf.exp(logstd)
-            dist = tf.distributions.Normal(loc=policy, scale=std)
 
-        with tf.variable_scope('value'):
-            out = make_fcs(fcs, inpt, activation=tf.nn.tanh,
-                           initializer=initializer(1.0))
-            value = layers.fully_connected(out, 1, activation_fn=None,
-                                           weights_initializer=w_init(1.0))
+        dist = tf.distributions.Normal(loc=mean, scale=std)
+    return dist
 
-        return dist, value
+def deterministic_policy_function(fcs,
+                                  inpt,
+                                  num_actions,
+                                  w_init=None,
+                                  last_w_init=None):
+    with tf.variable_scope('policy'):
+        out = make_fcs(fcs, inpt, tf.nn.tanh, w_init)
+        policy = tf.layers.dense(out, num_actions, activation=None,
+                                 kernel_initializer=last_w_init,
+                                 name='output')
+    return policy
 
+def value_function(fcs, inpt, w_init=None, last_w_init=None):
+    with tf.variable_scope('value'):
+        out = make_fcs(fcs, inpt, tf.nn.tanh, w_init)
+        value = tf.layers.dense(out, 1, activation=None,
+                                kernel_initializer=last_w_init,
+                                name='output')
+    return value
+
+def stochastic_function(fcs, num_actions, scope, w_init=None):
+    def func(inpt):
+        def last_w_init(scale):
+            input_dim = int(inpt.shape[1])
+            stddev = np.sqrt(scale / input_dim)
+            return tf.random_normal_initializer(stddev=stddev)
+
+        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
+            policy = stochastic_policy_function(fcs, inpt, num_actions,
+                                                w_init, last_w_init(0.01))
+            value = value_function(fcs, inpt, w_init, last_w_init(1.0))
+        return policy, value
+    return func
+
+def deterministic_function(fcs, num_actions, scope, w_init=None):
+    def func(inpt):
+        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
+            policy = stochastic_policy_function(
+                fcs, inpt, num_actions, w_init,
+                tf.random_uniform_initializer(-3e-3, 3e-3))
+            value = value_function(
+                fcs, inpt, w_init, tf.random_uniform_initializer(-3e-4, 3e-4))
+        return policy, value
     return func
