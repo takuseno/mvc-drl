@@ -16,7 +16,8 @@ setting = {
     'adapter': None,
     'verbose': True,
     'writers': {},
-    'experiment_name': None
+    'experiment_name': None,
+    'disable': False
 }
 
 def _write_csv(name, metric, step):
@@ -64,9 +65,17 @@ def set_experiment_name(experiment_name):
 def set_verbose(verbose):
     setting[verbose] = verbose
 
+def enable():
+    setting['disable'] = False
+
+def disable():
+    setting['disable'] = True
+
 def log_parameters(hyper_params):
     assert isinstance(hyper_params, dict)
     assert setting['experiment_name'] is not None
+    if setting['disable']:
+        return
 
     if setting['adapter'] is not None:
         setting['adapter'].log_parameters(hyper_params)
@@ -78,6 +87,8 @@ def log_parameters(hyper_params):
     _write_hyper_params(hyper_params)
 
 def set_model_graph(graph):
+    if setting['disable']:
+        return
     if setting['adapter'] is not None:
         setting['adapter'].set_model_path(graph)
 
@@ -86,6 +97,8 @@ def log_metric(name, metric, step):
     assert isinstance(metric, int) or isinstance(metric, float)
     assert isinstance(step, int)
     assert setting['experiment_name'] is not None
+    if setting['disable']:
+        return
 
     if setting['adapter'] is not None:
         setting['adapter'].log_metric(name, metric, step)
