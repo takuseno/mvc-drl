@@ -1,0 +1,11 @@
+{
+    "comet_ml": {
+        "api_key": "your api key",
+        "project_name": "your project name"
+    },
+    "visdom": {
+        "host": "http://localhost",
+        "port": 8097,
+        "environment": "your environment"
+    }
+}
