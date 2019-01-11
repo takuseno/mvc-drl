@@ -5,6 +5,8 @@ from unittest.mock import MagicMock
 from mvc.parametric_function import _make_fcs
 from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import deterministic_policy_function
+from mvc.parametric_function import value_function
+from mvc.parametric_function import stochastic_function
 
 
 def make_inpt():
@@ -170,6 +172,88 @@ class DeterministicPolicyFunctionTest(tf.test.TestCase):
 
             before = sess.run(variable)
             for var in before:
+                assert_variable_range(var, -0.1, 0.1)
+
+            sess.run(optimize_expr)
+
+            after = sess.run(variable)
+            assert_variable_mismatch(before, after)
+
+class ValueFunctionTest(tf.test.TestCase):
+    def test_value_function(self):
+        inpt = make_inpt()
+        fcs = make_fcs()
+        w_init = tf.random_uniform_initializer(-0.1, 0.1)
+
+        value = value_function(
+            fcs, inpt, w_init=w_init, last_w_init=w_init)
+
+        # to check connection
+        optimizer = tf.train.AdamOptimizer(1e-4)
+        optimize_expr = optimizer.minimize(tf.reduce_mean(value))
+
+        assert int(value.shape[0]) == int(inpt.shape[0])
+        assert int(value.shape[1]) == 1
+
+        hiddens = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'value/hiddens')
+        assert_hidden_variable_shape(hiddens, inpt, fcs)
+
+        output = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'value/output')[0]
+        assert int(output.shape[0]) == fcs[-1]
+        assert int(output.shape[1]) == 1
+
+        variable = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'value')
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+
+            before = sess.run(variable)
+            for var in before:
+                assert_variable_range(var, -0.1, 0.1)
+
+            sess.run(optimize_expr)
+
+            after = sess.run(variable)
+            assert_variable_mismatch(before, after)
+
+class StochasticFunctionTest(tf.test.TestCase):
+    def test_stochastic_function(self):
+        inpt = make_inpt()
+        fcs = make_fcs()
+        num_actions = np.random.randint(10) + 1
+        w_init = tf.random_uniform_initializer(-0.1, 0.1)
+
+        func = stochastic_function(fcs, num_actions, 'scope', w_init)
+
+        policy, value = func(inpt)
+
+        # to check connection
+        optimizer = tf.train.AdamOptimizer(1e-4)
+        optimize_expr = optimizer.minimize(tf.reduce_mean(policy.sample(1)) + tf.reduce_mean(value))
+
+        assert int(policy.sample(1)[0].shape[0]) == int(inpt.shape[0])
+        assert int(policy.sample(1)[0].shape[1]) == num_actions
+        assert int(value.shape[0]) == int(inpt.shape[0])
+        assert int(value.shape[1]) == 1
+
+        policy_hiddens = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/policy/hiddens')
+        assert_hidden_variable_shape(policy_hiddens, inpt, fcs)
+
+        value_hiddens = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/value/hiddens')
+        assert_hidden_variable_shape(value_hiddens, inpt, fcs)
+
+        variable = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope')
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+
+            before = sess.run(variable)
+            before_policy_hiddens = sess.run(policy_hiddens)
+            before_value_hiddens = sess.run(value_hiddens)
+
+            for var in before_policy_hiddens:
+                assert_variable_range(var, -0.1, 0.1)
+            for var in before_value_hiddens:
                 assert_variable_range(var, -0.1, 0.1)
 
             sess.run(optimize_expr)

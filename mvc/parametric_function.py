@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 
 def _make_fcs(fcs, inpt, activation=tf.nn.relu, w_init=None):
@@ -64,19 +65,9 @@ def stochastic_function(fcs, num_actions, scope, w_init=None):
             return tf.random_normal_initializer(stddev=stddev)
 
         with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
-            policy = stochastic_policy_function(fcs, inpt, num_actions,
-                                                w_init, last_w_init(0.01))
-            value = value_function(fcs, inpt, w_init, last_w_init(1.0))
-        return policy, value
-    return func
-
-def deterministic_function(fcs, num_actions, scope, w_init=None):
-    def func(inpt):
-        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
             policy = stochastic_policy_function(
-                fcs, inpt, num_actions, w_init,
-                tf.random_uniform_initializer(-3e-3, 3e-3))
-            value = value_function(
-                fcs, inpt, w_init, tf.random_uniform_initializer(-3e-4, 3e-4))
+                fcs, inpt, num_actions, w_init=w_init,
+                last_w_init=last_w_init(0.01))
+            value = value_function(fcs, inpt, w_init, last_w_init(1.0))
         return policy, value
     return func
