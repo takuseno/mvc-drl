@@ -4,11 +4,11 @@ from visdom import Visdom
 from mvc.logger.base_adapter import BaseAdapter
 
 
-def json_to_html(json_str):
-    html = '<div>'
-    for line in json_str.split('\n'):
-        html += '<p><span>' + line.replace(' ', '&nbsp;') + '</span></p>'
-    html += '</div>'
+def dict_to_html(params):
+    html = '<table class="table table-bordered">'
+    for key, value in params.items():
+        html += '<tr><th>{}</th><td>{}</td></tr>'.format(key, value)
+    html += '</table>'
     return html
 
 class VisdomAdapter(BaseAdapter):
@@ -18,7 +18,7 @@ class VisdomAdapter(BaseAdapter):
 
     def log_parameters(self, hyper_params):
         hyper_params['experiment_name'] = self.name
-        html = json_to_html(json.dumps(hyper_params, indent=2))
+        html = dict_to_html(hyper_params)
         self.visdom.text(html)
 
     def set_model_graph(self, graph):
