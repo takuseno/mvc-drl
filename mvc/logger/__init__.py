@@ -96,7 +96,6 @@ def set_model_graph(graph):
 
 def log_metric(name, metric, step):
     assert isinstance(name, str)
-    assert isinstance(metric, int) or isinstance(metric, float)
     assert isinstance(step, int)
     assert setting['experiment_name'] is not None
     if setting['disable']:
