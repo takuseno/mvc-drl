@@ -8,16 +8,18 @@ from mvc.models.networks.ppo import build_policy_loss
 from mvc.models.networks.ppo import build_entropy_loss
 
 
-def function(obs, num_actions):
-    with tf.variable_scope('test'):
-        out = tf.layers.dense(obs, 64)
-        loc = tf.layers.dense(out, num_actions)
-        scale = tf.layers.dense(out, num_actions)
-        dist = tf.distributions.Normal(loc=loc, scale=scale)
+def function(num_actions):
+    def func(obs):
+        with tf.variable_scope('test'):
+            out = tf.layers.dense(obs, 64)
+            loc = tf.layers.dense(out, num_actions)
+            scale = tf.layers.dense(out, num_actions)
+            dist = tf.distributions.Normal(loc=loc, scale=scale)
 
-        out = tf.layers.dense(obs, 64)
-        value = tf.layers.dense(out, 1)
-    return dist, value
+            out = tf.layers.dense(obs, 64)
+            value = tf.layers.dense(out, 1)
+        return dist, value
+    return func
 
 class BuildValueLossTest(tf.test.TestCase):
     def test_success(self):
@@ -192,16 +194,17 @@ class PPONetworkTest(tf.test.TestCase):
         self.state_shape = [np.random.randint(4) + 1]
         self.num_envs = np.random.randint(4) + 1
         self.num_actions = np.random.randint(4) + 1
-        self.time_horizon = np.random.randint(20) + 1
+        self.batch_size = np.random.randint(20) + 1
         self.epsilon = np.random.random()
         self.lr = np.random.random()
         self.grad_clip = np.random.random()
         self.value_factor = np.random.random()
         self.entropy_factor = np.random.random()
-        self.network = PPONetwork(function, self.state_shape, self.num_envs,
-                                  self.num_actions, self.time_horizon,
-                                  self.epsilon, self.lr, self.grad_clip,
-                                  self.value_factor, self.entropy_factor)
+        self.network = PPONetwork(function(self.num_actions), self.state_shape,
+                                  self.num_envs, self.num_actions,
+                                  self.batch_size, self.epsilon, self.lr,
+                                  self.grad_clip, self.value_factor,
+                                  self.entropy_factor)
 
     def test_build(self):
         assert int(self.network.action.shape[0]) == self.num_envs
@@ -239,12 +242,12 @@ class PPONetworkTest(tf.test.TestCase):
         assert output.value.shape == (self.num_envs,)
 
     def test_update(self):
-        obs = np.random.random([self.num_envs * self.time_horizon] + self.state_shape)
-        actions = np.random.random((self.num_envs * self.time_horizon, self.num_actions))
-        returns = np.random.random((self.num_envs * self.time_horizon,))
-        returns = np.random.random((self.num_envs * self.time_horizon,))
-        advantages = np.random.random((self.num_envs * self.time_horizon,))
-        old_log_probs = np.random.random((self.num_envs * self.time_horizon, self.num_actions))
+        obs = np.random.random([self.batch_size] + self.state_shape)
+        actions = np.random.random((self.batch_size, self.num_actions))
+        returns = np.random.random((self.batch_size,))
+        returns = np.random.random((self.batch_size,))
+        advantages = np.random.random((self.batch_size,))
+        old_log_probs = np.random.random((self.batch_size, self.num_actions))
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'ppo')
 
         with self.test_session() as sess:

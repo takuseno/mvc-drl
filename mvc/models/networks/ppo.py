@@ -39,14 +39,14 @@ class PPONetwork(BaseNetwork):
                  state_shape,
                  num_envs,
                  num_actions,
-                 time_horizon,
+                 batch_size,
                  epsilon,
                  lr,
                  grad_clip,
                  value_factor,
                  entropy_factor):
 
-        self._build(function, state_shape, num_envs, num_actions, time_horizon,
+        self._build(function, state_shape, num_envs, num_actions, batch_size,
                     epsilon, lr, grad_clip, value_factor, entropy_factor)
 
     def _infer(self, **kwargs):
@@ -73,21 +73,19 @@ class PPONetwork(BaseNetwork):
                state_shape,
                num_envs,
                num_actions,
-               time_horizon,
+               batch_size,
                epsilon,
                lr,
                grad_clip,
                value_factor,
                entropy_factor):
 
-        batch_size = num_envs * time_horizon
-
         with tf.variable_scope('ppo', reuse=tf.AUTO_REUSE):
             # placeholers
             step_obs_ph = self.step_obs_ph = tf.placeholder(
-                tf.float32, [num_envs] + state_shape, name='step_obs')
+                tf.float32, [num_envs] + list(state_shape), name='step_obs')
             train_obs_ph = self.train_obs_ph = tf.placeholder(
-                tf.float32, [batch_size] + state_shape, name='train_obs')
+                tf.float32, [batch_size] + list(state_shape), name='train_obs')
             returns_ph = self.returns_ph = tf.placeholder(
                 tf.float32, [batch_size], name='returns')
             advantages_ph = self.advantages_ph = tf.placeholder(
@@ -98,9 +96,9 @@ class PPONetwork(BaseNetwork):
                 tf.float32, [batch_size, num_actions], name='old_log_prob')
 
             # network outputs for inference
-            step_dist, step_values = function(step_obs_ph, num_actions)
+            step_dist, step_values = function(step_obs_ph)
             # network outputs for training
-            train_dist, train_values = function(train_obs_ph, num_actions)
+            train_dist, train_values = function(train_obs_ph)
 
             # prepare for loss calculation
             advantages = tf.reshape(advantages_ph, [-1, 1])
