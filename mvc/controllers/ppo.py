@@ -48,7 +48,7 @@ class PPOController(BaseController):
         # record metrics
         self.metrics.add('step', self.num_envs)
         for i in range(self.num_envs):
-            if done[i]:
+            if done[i] == 1.0:
                 self.metrics.add('reward', info[i]['reward'])
 
         return output.action

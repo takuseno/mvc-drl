@@ -2,7 +2,6 @@ import numpy as np
 import unittest
 import pytest
 import copy
-import mvc.logger as logger
 
 from unittest.mock import MagicMock, Mock
 from mvc.models.networks.base_network import BaseNetwork
