@@ -2,11 +2,13 @@ import numpy as np
 import unittest
 import pytest
 import copy
+import mvc.logger as logger
 
 from unittest.mock import MagicMock, Mock
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.controllers.ppo import PPOController, shuffle_batch
 from mvc.models.rollout import Rollout
+from mvc.models.metrics import Metrics
 from mvc.preprocess import compute_returns, compute_gae
 from mvc.action_output import ActionOutput
 
@@ -24,6 +26,28 @@ class DummyNetwork(BaseNetwork):
     def _update_arguments(self):
         pass
 
+class DummyMetrics(Metrics):
+    def __init__(self):
+        super().__init__('test')
+
+    def register(self, name, mode, **kwargs):
+        pass
+
+    def add(self, name, value):
+        pass
+
+    def get(self, name):
+        pass
+
+    def log_metric(self):
+        pass
+
+    def log_parameters(self):
+        pass
+
+    def reset(self):
+        pass
+
 def make_output():
     action = np.random.random((4, 4))
     log_prob = np.random.random((4, 4))
@@ -34,7 +58,8 @@ def make_inputs():
     obs = np.random.random((4, 84, 84))
     reward = np.random.random((4,))
     done = np.zeros((4,))
-    return obs, reward, done
+    info = [{'reward': np.random.random()} for _ in range(4)]
+    return obs, reward, done, info
 
 class ShuffleBatchTest(unittest.TestCase):
     def test_success(self):
@@ -73,25 +98,34 @@ class PPOControllerTest(unittest.TestCase):
     def test_init_success(self):
         network = DummyNetwork()
         rollout = Rollout()
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        metrics = DummyMetrics()
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
 
     def test_init_with_error(self):
         with pytest.raises(AssertionError):
             network = 'network'
             rollout = Rollout()
-            cotroller = PPOController(network, rollout, 20, 0.99, 0.9)
+            metrics = DummyMetrics()
+            cotroller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         with pytest.raises(AssertionError):
             network = DummyNetwork()
             rollout = 'rollout'
-            cotroller = PPOController(network, rollout, 20, 0.99, 0.9)
+            metrics = DummyMetrics()
+            cotroller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
+        with pytest.raises(AssertionError):
+            network = DummyNetwork()
+            rollout = Rollout()
+            metrics = 'metrics'
+            cotroller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
 
     def test_step(self):
         rollout = Rollout()
         network = DummyNetwork()
+        metrics = DummyMetrics()
         output = make_output()
         network._infer = MagicMock(return_value=output)
         network._infer_arguments = MagicMock(return_value=['obs_t'])
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         inputs = make_inputs()
         action = controller.step(*inputs)
 
@@ -107,10 +141,11 @@ class PPOControllerTest(unittest.TestCase):
     def test_should_update(self):
         rollout = Rollout()
         network = DummyNetwork()
+        metrics = DummyMetrics()
         output = make_output()
         network._infer = MagicMock(return_value=output)
         network._infer_arguments = MagicMock(return_value=['obs_t'])
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         inputs = make_inputs()
         for i in range(20):
             controller.step(*inputs)
@@ -121,9 +156,10 @@ class PPOControllerTest(unittest.TestCase):
     def test_batch_success(self):
         rollout = Rollout()
         network = DummyNetwork()
+        metrics = DummyMetrics()
         output = make_output()
         network._infer_arguments = MagicMock(return_value=['obs_t'])
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         input_history = []
         output_history = []
         for i in range(21):
@@ -162,10 +198,11 @@ class PPOControllerTest(unittest.TestCase):
     def test_batch_with_short_trajectory_error(self):
         rollout = Rollout()
         network = DummyNetwork()
+        metrics = DummyMetrics()
         output = make_output()
         network._infer_arguments = MagicMock(return_value=['obs_t'])
         network._infer = MagicMock(return_value=output)
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         inputs = make_inputs()
         action = controller.step(*inputs)
         with pytest.raises(AssertionError):
@@ -174,11 +211,12 @@ class PPOControllerTest(unittest.TestCase):
     def test_update_with_should_update_false(self):
         rollout = Rollout()
         network = DummyNetwork()
+        metrics = DummyMetrics()
         inputs = make_inputs()
         output = make_output()
         network._infer = MagicMock(return_value=output)
         network._infer_arguments = MagicMock(return_value=['obs_t'])
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         for i in range(20):
             action = controller.step(*inputs)
         with pytest.raises(AssertionError):
@@ -187,6 +225,7 @@ class PPOControllerTest(unittest.TestCase):
     def test_update_success(self):
         rollout = Rollout()
         network = DummyNetwork()
+        metrics = DummyMetrics()
         inputs = make_inputs()
         output = make_output()
         loss = np.random.random()
@@ -194,7 +233,7 @@ class PPOControllerTest(unittest.TestCase):
         network._infer_arguments = MagicMock(return_value=['obs_t'])
         network._update_arguments = MagicMock(return_value=['obs_t', 'actions_t', 'returns_t', 'advantages_t', 'log_probs_t'])
         network._update = MagicMock(return_value=loss)
-        controller = PPOController(network, rollout, 20, 0.99, 0.9)
+        controller = PPOController(network, rollout, metrics, 20, 0.99, 0.9)
         for i in range(21):
             action = controller.step(*inputs)
         

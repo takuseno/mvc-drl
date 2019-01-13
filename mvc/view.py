@@ -2,21 +2,27 @@ class TrainView:
     def __init__(self, controller):
         self.controller = controller
 
-    def step(self, obs, reward, done):
+    def step(self, obs, reward, done, info):
         if self.controller.should_update():
             self.controller.update()
-        return self.controller.step(obs, reward, done)
 
-    def stop_episode(self, obs, reward):
-        self.controller.stop_episode(obs, reward)
+        if self.controller.should_log():
+            self.controller.log()
+
+        return self.controller.step(obs, reward, done, info)
+
+    def stop_episode(self, obs, reward, info):
+        self.controller.stop_episode(obs, reward, info)
 
 
 class EvalView:
     def __init__(self, controller):
         self.controller = controller
 
-    def step(self, obs, reward, done):
-        return self.controller.step(obs, reward, done)
+    def step(self, obs, reward, done, info):
+        if self.controller.should_log():
+            self.controller.log()
+        return self.controller.step(obs, reward, done, info)
 
-    def stop_episode(self, obs, reward):
-        self.controller.stop_episode(obs, reward)
+    def stop_episode(self, obs, reward, info):
+        self.controller.stop_episode(obs, reward, info)

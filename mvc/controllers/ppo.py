@@ -1,8 +1,9 @@
 import numpy as np
 
-from mvc.controllers.base_controller import BaseController
-from mvc.models.networks.base_network import BaseNetwork
+from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
+from mvc.models.networks.base_network import BaseNetwork
+from mvc.controllers.base_controller import BaseController
 from mvc.preprocess import compute_returns, compute_gae
 
 
@@ -16,22 +17,43 @@ def shuffle_batch(batch, size):
     return batch
 
 class PPOController(BaseController):
-    def __init__(self, network, rollout, time_horizon, gamma, lam):
+    def __init__(self,
+                 network,
+                 rollout,
+                 metrics,
+                 time_horizon,
+                 gamma,
+                 lam,
+                 log_interval=None):
         assert isinstance(network, BaseNetwork)
         assert isinstance(rollout, Rollout)
+        assert isinstance(metrics, Metrics)
 
         self.network = network
         self.rollout = rollout
+        self.metrics = metrics
         self.time_horizon = time_horizon
         self.gamma = gamma
         self.lam = lam
+        self.log_interval = time_horizon if not log_interval else log_interval
 
-    def step(self, obs, reward, done):
+        self.metrics.register('step', 'single')
+        self.metrics.register('loss', 'queue')
+        self.metrics.register('reward', 'queue')
+
+    def step(self, obs, reward, done, info):
         # infer action, policy, value
         output = self.network.infer(obs_t=obs)
         # store trajectory
         self.rollout.add(obs, output.action, reward,
                          output.value, output.log_prob, done)
+
+        # record metrics
+        self.metrics.add('step', obs.shape[0])
+        for i in range(obs.shape[0]):
+            if done[i]:
+                self.metrics.add('reward', info[i]['reward'])
+
         return output.action
 
     def should_update(self):
@@ -45,9 +67,22 @@ class PPOController(BaseController):
         # flush stored trajectories
         self.rollout.flush()
         # update parameter
-        return self.network.update(**batch)
+        loss = self.network.update(**batch)
 
-    def stop_episode(self, obs, reward):
+        # record metrics
+        self.metrics.add('loss', loss)
+
+        return loss
+
+    def should_log(self):
+        return self.metrics.get('step') % self.log_interval == 0
+
+    def log(self):
+        step = self.metrics.get('step')
+        self.metrics.log_metric('reward', step)
+        self.metrics.log_metric('loss', step)
+
+    def stop_episode(self, obs, reward, info):
         pass
 
     def _batch(self):

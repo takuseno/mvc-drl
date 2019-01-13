@@ -4,8 +4,8 @@ import logging
 import os
 
 from datetime import datetime
-from mvc.logger.comet_ml_adapter import CometMlAdapter
 from mvc.logger.visdom_adapter import VisdomAdapter
+# from mvc.logger.comet_ml_adapter import CometMlAdapter
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -53,9 +53,10 @@ def set_adapter(adapter, experiment_name, config_path='config.json'):
             environment=config['visdom']['environment'],
             experiment_name=experiment_name)
     elif adapter == 'comet_ml':
-        setting['adapter'] = CometMlAdapter(
-            config['comet_ml']['api_key'], config['comet_ml']['project_name'],
-            experiment_name)
+        # setting['adapter'] = CometMlAdapter(
+        #     config['comet_ml']['api_key'], config['comet_ml']['project_name'],
+        #     experiment_name)
+        assert KeyError('comet ml is not supported for this version')
     else:
         raise KeyError()
 

@@ -10,3 +10,9 @@ class BaseController:
 
     def stop_episode(self, obs, reward):
         raise NotImplementedError('implement update function')
+
+    def should_log(self):
+        raise NotImplementedError('implement should_log function')
+
+    def log(self):
+        raise NotImplementedError('implement log function')
