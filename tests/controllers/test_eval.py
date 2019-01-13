@@ -179,4 +179,5 @@ class EvalControllerTest(TestCase):
 
         metrics.get.assert_called_once_with('step')
         metrics.log_metric.assert_called_once_with('eval_reward', 5)
-        metrics.reset.assert_called_once_with('eval_episode')
+        assert list(metrics.reset.mock_calls[0])[1] == ('eval_episode',)
+        assert list(metrics.reset.mock_calls[1])[1] == ('eval_reward',)

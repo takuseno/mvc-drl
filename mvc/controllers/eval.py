@@ -49,3 +49,4 @@ class EvalController(BaseController):
         step = self.metrics.get('step')
         self.metrics.log_metric('eval_reward', step)
         self.metrics.reset('eval_episode')
+        self.metrics.reset('eval_reward')
