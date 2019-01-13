@@ -32,7 +32,7 @@ def _write_csv(name, metric, step):
 
 def _write_hyper_params(parameters):
     directory = os.path.join(setting['path'], setting['experiment_name'])
-    path = os.path.join(directory, 'hyper_params.csv')
+    path = os.path.join(directory, 'hyper_params.json')
     if not os.path.exists(directory):
         os.makedirs(directory)
     with open(path, 'w') as f:
