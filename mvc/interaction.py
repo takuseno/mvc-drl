@@ -10,9 +10,11 @@ class BatchInteraction:
         obs = self.env.reset()
         reward = np.zeros((obs.shape[0],), dtype=np.float32)
         done = np.zeros((obs.shape[0],), dtype=np.float32)
-        info = None
+        info = {}
         while True:
             obs, reward, done, info = self.step(obs, reward, done, info)
+            if self.view.is_finished():
+                break
 
     def step(self, obs, reward, done, info):
         action = self.view.step(obs, reward, done, info)
