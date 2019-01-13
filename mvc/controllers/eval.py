@@ -45,8 +45,13 @@ class EvalController(BaseController):
     def should_log(self):
         return self.metrics.get('eval_episode') == self.num_episodes
 
+    def is_finished(self):
+        is_finished = self.metrics.get('eval_episode') >= self.num_episodes
+        if is_finished:
+            self.metrics.reset('eval_episode')
+            self.metrics.reset('eval_reward')
+        return is_finished
+
     def log(self):
         step = self.metrics.get('step')
         self.metrics.log_metric('eval_reward', step)
-        self.metrics.reset('eval_episode')
-        self.metrics.reset('eval_reward')

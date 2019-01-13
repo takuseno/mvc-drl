@@ -18,7 +18,8 @@ class PPOController(BaseController):
                  batch_size,
                  gamma,
                  lam,
-                 log_interval=None):
+                 log_interval=None,
+                 final_steps=10 ** 6):
         assert isinstance(network, BaseNetwork)
         assert isinstance(rollout, Rollout)
         assert isinstance(metrics, Metrics)
@@ -33,6 +34,7 @@ class PPOController(BaseController):
         self.gamma = gamma
         self.lam = lam
         self.log_interval = time_horizon if not log_interval else log_interval
+        self.final_steps = final_steps
 
         self.metrics.register('step', 'single')
         self.metrics.register('loss', 'queue')
@@ -88,6 +90,9 @@ class PPOController(BaseController):
 
     def stop_episode(self, obs, reward, info):
         pass
+
+    def is_finished(self):
+        return self.metrics.get('step') >= self.final_steps
 
     def _batches(self):
         assert self.rollout.size() > 1

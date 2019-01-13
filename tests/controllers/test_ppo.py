@@ -218,3 +218,19 @@ class PPOControllerTest(unittest.TestCase):
         assert np.allclose(controller.update(), loss)
         assert rollout.size() == 0
         assert network._update.call_count == 128 * 4 * 4 // 32
+
+    def test_is_finished(self):
+        rollout = Rollout()
+        network = DummyNetwork()
+        metrics = DummyMetrics()
+        controller = PPOController(network, rollout, metrics, num_envs=4,
+                                   time_horizon=128, epoch=4, batch_size=32,
+                                   gamma=0.99, lam=0.9, final_steps=10)
+
+        metrics.get = MagicMock(return_value=5)
+        assert not controller.is_finished()
+        metrics.get.assert_called_once_with('step')
+
+        metrics.get = MagicMock(return_value=10)
+        assert controller.is_finished()
+        metrics.get.assert_called_once_with('step')

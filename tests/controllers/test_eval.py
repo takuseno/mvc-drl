@@ -179,5 +179,20 @@ class EvalControllerTest(TestCase):
 
         metrics.get.assert_called_once_with('step')
         metrics.log_metric.assert_called_once_with('eval_reward', 5)
+
+    def test_is_finished(self):
+        network = DummyNetwork()
+        metrics = DummyMetrics()
+        metrics.has = MagicMock(return_value=True)
+        controller = EvalController(network, metrics, 10)
+
+        metrics.get = MagicMock(return_value=5)
+        metrics.reset = MagicMock()
+
+        assert not controller.is_finished()
+        metrics.reset.assert_not_called()
+
+        metrics.get = MagicMock(return_value=10)
+        assert controller.is_finished()
         assert list(metrics.reset.mock_calls[0])[1] == ('eval_episode',)
         assert list(metrics.reset.mock_calls[1])[1] == ('eval_reward',)

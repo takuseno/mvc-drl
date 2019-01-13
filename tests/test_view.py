@@ -1,7 +1,7 @@
 import unittest
 
 from unittest.mock import MagicMock, Mock
-from mvc.view import TrainView, EvalView
+from mvc.view import View
 
 
 class DummyController:
@@ -24,10 +24,10 @@ class DummyController:
         pass
 
 
-class TrainViewTest(unittest.TestCase):
+class ViewTest(unittest.TestCase):
     def test_step_without_update(self):
         controller = DummyController()
-        view = TrainView(controller)
+        view = View(controller)
         controller.should_update = MagicMock(return_value=False)
         controller.update = MagicMock(side_effect=Exception)
         controller.step = MagicMock(return_value='action')
@@ -37,7 +37,7 @@ class TrainViewTest(unittest.TestCase):
 
     def test_step_with_update(self):
         controller = DummyController()
-        view = TrainView(controller)
+        view = View(controller)
         controller.should_update = MagicMock(return_value=True)
         controller.update = MagicMock(unsafe=True)
         controller.step = MagicMock(return_value='action')
@@ -48,7 +48,7 @@ class TrainViewTest(unittest.TestCase):
 
     def test_step_without_log(self):
         controller = DummyController()
-        view = TrainView(controller)
+        view = View(controller)
         controller.should_log = MagicMock(return_value=False)
         controller.log = MagicMock(side_effect=Exception)
         controller.step = MagicMock(return_value='action')
@@ -59,7 +59,7 @@ class TrainViewTest(unittest.TestCase):
 
     def test_step_with_log(self):
         controller = DummyController()
-        view = TrainView(controller)
+        view = View(controller)
         controller.should_log = MagicMock(return_value=True)
         controller.log = MagicMock(unsafe=True)
         controller.step = MagicMock(return_value='action')
@@ -70,58 +70,18 @@ class TrainViewTest(unittest.TestCase):
 
     def test_stop_episode(self):
         controller = DummyController()
-        view = TrainView(controller)
+        view = View(controller)
         controller.stop_episode = MagicMock()
 
         self.assertEqual(view.stop_episode('obs', 'reward', 'info'), None)
         controller.stop_episode.assert_called_once_with('obs', 'reward', 'info')
 
-class EvalViewTest(unittest.TestCase):
-    def test_step_without_should_update_false(self):
+    def test_is_finished(self):
         controller = DummyController()
-        view = EvalView(controller)
-        controller.should_update = MagicMock(return_value=False)
-        controller.update = MagicMock(side_effect=Exception)
-        controller.step = MagicMock(return_value='action')
+        view = View(controller)
 
-        self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
-        controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
+        controller.is_finished = MagicMock(return_value=False)
+        assert not view.is_finished()
 
-    def test_step_with_should_update_true(self):
-        controller = DummyController()
-        view = EvalView(controller)
-        controller.should_update = MagicMock(return_value=True)
-        controller.update = MagicMock(side_effect=Exception)
-        controller.step = MagicMock(return_value='action')
-
-        self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
-        controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
-
-    def test_step_with_should_log_false(self):
-        controller = DummyController()
-        view = EvalView(controller)
-        controller.should_log = MagicMock(return_value=False)
-        controller.log = MagicMock(side_effect=Exception)
-        controller.step = MagicMock(return_value='action')
-
-        self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
-        controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
-
-    def test_step_with_should_log_true(self):
-        controller = DummyController()
-        view = EvalView(controller)
-        controller.should_log = MagicMock(return_value=True)
-        controller.log = MagicMock(unsafe=True)
-        controller.step = MagicMock(return_value='action')
-
-        self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
-        controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
-        controller.log.assert_called_once()
-
-    def test_stop_episode(self):
-        controller = DummyController()
-        view = EvalView(controller)
-        controller.stop_episode = MagicMock()
-
-        self.assertEqual(view.stop_episode('obs', 'reward', 'info'), None)
-        controller.stop_episode.assert_called_once_with('obs', 'reward', 'info')
+        controller.is_finished = MagicMock(return_value=True)
+        assert view.is_finished()

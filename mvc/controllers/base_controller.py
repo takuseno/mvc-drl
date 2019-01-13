@@ -16,3 +16,6 @@ class BaseController:
 
     def log(self):
         raise NotImplementedError('implement log function')
+
+    def is_finished(self):
+        raise NotImplementedError('implement is_finished function')
