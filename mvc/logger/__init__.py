@@ -61,7 +61,8 @@ def set_adapter(adapter, experiment_name, config_path='config.json'):
         raise KeyError()
 
 def set_experiment_name(experiment_name):
-    setting['experiment_name'] = experiment_name
+    date = datetime.now().strftime('%Y%m%d%H%M%S')
+    setting['experiment_name'] = experiment_name + '_' + date
 
 def set_verbose(verbose):
     setting[verbose] = verbose
