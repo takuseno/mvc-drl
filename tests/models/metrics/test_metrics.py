@@ -82,3 +82,15 @@ class MetricsTest(TestCase):
         metrics.reset('test1')
 
         assert metrics.get('test1') == 0
+
+    @patch('mvc.logger.set_experiment_name')
+    def test_has(self, set_experiment_name):
+        metrics = Metrics('test')
+
+        assert not metrics.has('test1')
+        metrics.register('test1', 'single')
+        assert metrics.has('test1')
+
+        assert not metrics.has('test2')
+        metrics.register('test2', 'queue')
+        assert metrics.has('test2')

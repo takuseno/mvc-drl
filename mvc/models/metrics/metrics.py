@@ -31,6 +31,9 @@ class Metrics:
         self._check_name(name)
         return self.metrics[name].get()
 
+    def has(self, name):
+        return name in self.metrics
+
     def log_metric(self, name, step):
         self._check_name(name)
         logger.log_metric(name, self.get(name), step)
