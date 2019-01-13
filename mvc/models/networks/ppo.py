@@ -25,7 +25,7 @@ def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
 
     with tf.variable_scope('policy_loss'):
         ratio = tf.exp(log_probs - old_log_probs)
-        ratio = tf.reduce_mean(ratio, axis=1, keep_dims=True)
+        ratio = tf.reduce_mean(ratio, axis=1, keepdims=True)
         surr1 = ratio * advantages
         surr2 = tf.clip_by_value(
             ratio, 1.0 - epsilon, 1.0 + epsilon) * advantages
