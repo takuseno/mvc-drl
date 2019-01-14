@@ -26,12 +26,13 @@ def main(args):
 
     rollout = Rollout()
 
-    metrics = Metrics(args.name, args.log_adapter)
+    saver = tf.train.Saver()
+    metrics = Metrics(args.name, args.log_adapter, saver)
 
     controller = PPOController(network, rollout, metrics, args.num_envs,
                                args.time_horizon, args.epoch, args.batch_size,
                                args.gamma, args.lam, args.log_interval,
-                               args.final_steps)
+                               args.save_interval, args.final_steps)
     view = View(controller)
 
     # save hyperparameters
@@ -39,6 +40,9 @@ def main(args):
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
+
+        if args.load is not None:
+            saver.restore(sess, args.load)
 
         interaction = BatchInteraction(env, view)
         interaction.loop()
@@ -77,5 +81,8 @@ if __name__ == '__main__':
                         help='experiment name')
     parser.add_argument('--log-adapter', type=str,
                         help='log adapter (visdom, comet_ml)')
+    parser.add_argument('--save-interval', type=int, default=2048 * 100,
+                        help='interval of saving parameters')
+    parser.add_argument('--load', type=str, help='path to model')
     args = parser.parse_args()
     main(args)
