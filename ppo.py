@@ -13,9 +13,14 @@ from mvc.interaction import BatchInteraction
 from mvc.parametric_function import stochastic_function
 
 
+def make_envs(env_name, num_envs):
+    return [gym.make(env_name) for _ in range(num_envs)]
+
 def main(args):
-    env = BatchEnvWrapper([gym.make(args.env) for _ in range(args.num_envs)])
-    eval_env = BatchEnvWrapper([gym.make(args.env) for _ in range(args.num_envs)])
+    env = BatchEnvWrapper(
+        make_envs(args.env, args.num_envs), render=args.render)
+    eval_env = BatchEnvWrapper(make_envs(args.env, args.num_envs))
+
     num_actions = env.action_space.shape[0]
 
     function = stochastic_function(args.layers, num_actions, 'ppo')
@@ -93,5 +98,7 @@ if __name__ == '__main__':
                         help='interval of evaluation')
     parser.add_argument('--eval-episodes', type=int, default=10,
                         help='the number of evaluation episode')
+    parser.add_argument('--render', action='store_true',
+                        help='show frames of environment')
     args = parser.parse_args()
     main(args)
