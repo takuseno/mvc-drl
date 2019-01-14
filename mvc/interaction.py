@@ -27,19 +27,12 @@ def loop(env, view, hook=None):
             break
 
 
-class BatchInteraction:
-    def __init__(self, env, view, eval_env=None, eval_view=None):
-        self.env = env
-        self.view = view
-        self.eval_env = eval_env
-        self.eval_view = eval_view
+def batch_interact(env, view, eval_env=None, eval_view=None, hook=None):
+    def _hook(view):
+        if eval_view is not None and view.should_eval():
+            loop(eval_env, eval_view)
 
-    def start(self, hook=None):
-        def _hook(view):
-            if view.should_eval():
-                loop(self.eval_env, self.eval_view)
+        if hook is not None:
+            hook(view)
 
-            if hook is not None:
-                hook(view)
-
-        loop(self.env, self.view, _hook)
+    loop(env, view, _hook)
