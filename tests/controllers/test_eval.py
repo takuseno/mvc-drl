@@ -157,13 +157,7 @@ class EvalControllerTest(TestCase):
         metrics.has = MagicMock(return_value=True)
         controller = EvalController(network, metrics, 10)
 
-        metrics.get = MagicMock(return_value=9)
         assert not controller.should_log()
-        metrics.get.assert_called_once_with('eval_episode')
-
-        metrics.get = MagicMock(return_value=10)
-        assert controller.should_log()
-        metrics.get.assert_called_once_with('eval_episode')
 
     def test_log(self):
         network = DummyNetwork()
@@ -171,14 +165,8 @@ class EvalControllerTest(TestCase):
         metrics.has = MagicMock(return_value=True)
         controller = EvalController(network, metrics, 10)
 
-        metrics.get = MagicMock(return_value=5)
-        metrics.log_metric = MagicMock()
-        metrics.reset = MagicMock()
-
-        controller.log()
-
-        metrics.get.assert_called_once_with('step')
-        metrics.log_metric.assert_called_once_with('eval_reward', 5)
+        with pytest.raises(Exception):
+            controller.log()
 
     def test_is_finished(self):
         network = DummyNetwork()
@@ -188,14 +176,17 @@ class EvalControllerTest(TestCase):
 
         metrics.get = MagicMock(return_value=5)
         metrics.reset = MagicMock()
+        metrics.log_metric = MagicMock()
 
         assert not controller.is_finished()
         metrics.reset.assert_not_called()
+        metrics.log_metric.assert_not_called()
 
         metrics.get = MagicMock(return_value=10)
         assert controller.is_finished()
         assert list(metrics.reset.mock_calls[0])[1] == ('eval_episode',)
         assert list(metrics.reset.mock_calls[1])[1] == ('eval_reward',)
+        metrics.log_metric.assert_called_once_with('eval_reward', 10)
 
     def test_should_save(self):
         network = DummyNetwork()
@@ -211,5 +202,6 @@ class EvalControllerTest(TestCase):
         metrics.has = MagicMock(return_value=True)
         controller = EvalController(network, metrics, 10)
 
-        with pytest.raises(Exception):
-            controller.save()
+        metrics.save_model = MagicMock()
+        controller.save()
+        metrics.save_model.assert_not_called()

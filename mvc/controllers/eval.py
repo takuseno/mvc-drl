@@ -43,18 +43,19 @@ class EvalController(BaseController):
         raise Exception('EvalController does not update parameters')
 
     def should_log(self):
-        return self.metrics.get('eval_episode') == self.num_episodes
+        return False
+    
+    def log(self):
+        raise Exception('EvalController does not log intermediate data')
 
     def is_finished(self):
         is_finished = self.metrics.get('eval_episode') >= self.num_episodes
         if is_finished:
+            step = self.metrics.get('step')
+            self.metrics.log_metric('eval_reward', step)
             self.metrics.reset('eval_episode')
             self.metrics.reset('eval_reward')
         return is_finished
-
-    def log(self):
-        step = self.metrics.get('step')
-        self.metrics.log_metric('eval_reward', step)
 
     def should_save(self):
         return False
@@ -63,4 +64,4 @@ class EvalController(BaseController):
         return False
 
     def save(self):
-        raise Exception('EvalController does not save parameters')
+        pass
