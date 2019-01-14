@@ -1,3 +1,4 @@
+import tensorflow as tf
 import json
 import csv
 import logging
@@ -20,21 +21,26 @@ setting = {
     'disable': False
 }
 
+def _get_dir():
+    return os.path.join(setting['path'], setting['experiment_name'])
+
+def _prepare_dir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 def _write_csv(name, metric, step):
     if name not in setting['writers']:
-        directory = os.path.join(setting['path'], setting['experiment_name'])
+        directory = _get_dir()
+        _prepare_dir(directory)
         path = os.path.join(directory, name + '.csv')
-        if not os.path.exists(directory):
-            os.makedirs(directory)
         file = open(path, 'w')
         setting['writers'][name] = csv.writer(file, lineterminator='\n')
     setting['writers'][name].writerow([step, metric])
 
 def _write_hyper_params(parameters):
-    directory = os.path.join(setting['path'], setting['experiment_name'])
+    directory = _get_dir()
+    _prepare_dir(directory)
     path = os.path.join(directory, 'hyper_params.json')
-    if not os.path.exists(directory):
-        os.makedirs(directory)
     with open(path, 'w') as f:
         f.write(json.dumps(parameters, indent=2))
 
@@ -51,7 +57,7 @@ def set_adapter(adapter, experiment_name, config_path='config.json'):
         setting['adapter'] = VisdomAdapter(
             host=config['visdom']['host'], port=config['visdom']['port'],
             environment=config['visdom']['environment'],
-            experiment_name=experiment_name)
+            experiment_name=setting['experiment_name'])
     elif adapter == 'comet_ml':
         # setting['adapter'] = CometMlAdapter(
         #     config['comet_ml']['api_key'], config['comet_ml']['project_name'],
@@ -93,6 +99,15 @@ def set_model_graph(graph):
         return
     if setting['adapter'] is not None:
         setting['adapter'].set_model_path(graph)
+
+def save_model(saver, step):
+    if setting['disable']:
+        return
+    sess = tf.get_default_session()
+    directory = _get_dir()
+    _prepare_dir(directory)
+    path = os.path.join(directory, 'model.ckpt')
+    saver.save(sess, path, global_step=step)
 
 def log_metric(name, metric, step):
     assert isinstance(name, str)

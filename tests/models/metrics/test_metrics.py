@@ -94,3 +94,16 @@ class MetricsTest(TestCase):
         assert not metrics.has('test2')
         metrics.register('test2', 'queue')
         assert metrics.has('test2')
+
+    @patch('mvc.logger.save_model')
+    @patch('mvc.logger.set_experiment_name')
+    def test_save_model(self, experiment_name, save_model):
+        step = np.random.randint(10) + 1
+
+        metrics = Metrics('test')
+        metrics.save_model(step)
+        save_model.assert_not_called()
+
+        metrics = Metrics('test', saver='saver')
+        metrics.save_model(step)
+        save_model.assert_called_once_with('saver', step)

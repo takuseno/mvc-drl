@@ -5,8 +5,9 @@ from mvc.models.metrics.queue_metric import QueueMetric
 
 
 class Metrics:
-    def __init__(self, experiment_name, adapter=None):
+    def __init__(self, experiment_name, adapter=None, saver=None):
         self.metrics = {}
+        self.saver = saver
         if adapter is None:
             logger.set_experiment_name(experiment_name)
         else:
@@ -40,6 +41,10 @@ class Metrics:
 
     def log_parameters(self, hyper_params):
         logger.log_parameters(hyper_params)
+
+    def save_model(self, step):
+        if self.saver is not None:
+            logger.save_model(self.saver, step)
 
     def reset(self, name):
         self._check_name(name)
