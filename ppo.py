@@ -15,6 +15,7 @@ from mvc.parametric_function import stochastic_function
 
 def main(args):
     env = BatchEnvWrapper([gym.make(args.env) for _ in range(args.num_envs)])
+    eval_env = BatchEnvWrapper([gym.make(args.env) for _ in range(args.num_envs)])
     num_actions = env.action_space.shape[0]
 
     function = stochastic_function(args.layers, num_actions, 'ppo')
@@ -31,9 +32,13 @@ def main(args):
 
     controller = PPOController(network, rollout, metrics, args.num_envs,
                                args.time_horizon, args.epoch, args.batch_size,
-                               args.gamma, args.lam, args.log_interval,
-                               args.save_interval, args.final_steps)
+                               args.gamma, args.lam, args.final_steps,
+                               args.log_interval,  args.save_interval,
+                               args.eval_interval)
     view = View(controller)
+
+    eval_controller = EvalController(network, metrics, args.eval_episodes)
+    eval_view = View(eval_controller)
 
     # save hyperparameters
     metrics.log_parameters(vars(args))
@@ -44,7 +49,7 @@ def main(args):
         if args.load is not None:
             saver.restore(sess, args.load)
 
-        interaction = BatchInteraction(env, view)
+        interaction = BatchInteraction(env, view, eval_env, eval_view)
         interaction.loop()
 
 if __name__ == '__main__':
@@ -84,5 +89,9 @@ if __name__ == '__main__':
     parser.add_argument('--save-interval', type=int, default=2048 * 100,
                         help='interval of saving parameters')
     parser.add_argument('--load', type=str, help='path to model')
+    parser.add_argument('--eval-interval', type=int, default=2048 * 100,
+                        help='interval of evaluation')
+    parser.add_argument('--eval-episodes', type=int, default=10,
+                        help='the number of evaluation episode')
     args = parser.parse_args()
     main(args)
