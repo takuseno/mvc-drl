@@ -44,7 +44,7 @@ class MetricsTest(TestCase):
         metrics.register('test', 'single')
         for value in values:
             metrics.add('test', value)
-        assert metrics.get('test') == np.sum(values)
+        assert np.allclose(metrics.get('test'), np.sum(values))
 
         metrics.register('test2', 'queue')
         for value in values:
