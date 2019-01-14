@@ -22,3 +22,6 @@ class View:
         if is_finished:
             self.controller.save()
         return is_finished
+
+    def should_eval(self):
+        return self.controller.should_eval()

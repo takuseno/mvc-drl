@@ -115,3 +115,13 @@ class ViewTest(unittest.TestCase):
         controller.is_finished = MagicMock(return_value=True)
         assert view.is_finished()
         controller.save.assert_called_once()
+
+    def test_should_eval(self):
+        controller = DummyController()
+        view = View(controller)
+
+        controller.should_eval = MagicMock(return_value=False)
+        assert not view.should_eval()
+
+        controller.should_eval = MagicMock(return_value=True)
+        assert view.should_eval()
