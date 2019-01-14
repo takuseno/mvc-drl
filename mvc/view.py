@@ -9,10 +9,16 @@ class View:
         if self.controller.should_log():
             self.controller.log()
 
+        if self.controller.should_save():
+            self.controller.save()
+
         return self.controller.step(obs, reward, done, info)
 
     def stop_episode(self, obs, reward, info):
         self.controller.stop_episode(obs, reward, info)
 
     def is_finished(self):
-        return self.controller.is_finished()
+        is_finished = self.controller.is_finished()
+        if is_finished:
+            self.controller.save()
+        return is_finished

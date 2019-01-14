@@ -196,3 +196,20 @@ class EvalControllerTest(TestCase):
         assert controller.is_finished()
         assert list(metrics.reset.mock_calls[0])[1] == ('eval_episode',)
         assert list(metrics.reset.mock_calls[1])[1] == ('eval_reward',)
+
+    def test_should_save(self):
+        network = DummyNetwork()
+        metrics = DummyMetrics()
+        metrics.has = MagicMock(return_value=True)
+        controller = EvalController(network, metrics, 10)
+
+        assert not controller.should_save()
+
+    def test_save(self):
+        network = DummyNetwork()
+        metrics = DummyMetrics()
+        metrics.has = MagicMock(return_value=True)
+        controller = EvalController(network, metrics, 10)
+
+        with pytest.raises(Exception):
+            controller.save()

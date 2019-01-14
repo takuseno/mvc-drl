@@ -17,5 +17,11 @@ class BaseController:
     def log(self):
         raise NotImplementedError('implement log function')
 
+    def should_save(self):
+        raise NotImplementedError('implement should_save function')
+
+    def save(self):
+        raise NotImplementedError('implement save function')
+
     def is_finished(self):
         raise NotImplementedError('implement is_finished function')

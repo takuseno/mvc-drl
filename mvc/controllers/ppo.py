@@ -19,6 +19,7 @@ class PPOController(BaseController):
                  gamma,
                  lam,
                  log_interval=None,
+                 save_interval=10 ** 5,
                  final_steps=10 ** 6):
         assert isinstance(network, BaseNetwork)
         assert isinstance(rollout, Rollout)
@@ -34,6 +35,7 @@ class PPOController(BaseController):
         self.gamma = gamma
         self.lam = lam
         self.log_interval = time_horizon if not log_interval else log_interval
+        self.save_interval = save_interval
         self.final_steps = final_steps
 
         self.metrics.register('step', 'single')
@@ -94,6 +96,12 @@ class PPOController(BaseController):
     def is_finished(self):
         return self.metrics.get('step') >= self.final_steps
 
+    def should_save(self):
+        return self.metrics.get('step') % self.save_interval == 0
+
+    def save(self):
+        self.metrics.save_model(self.metrics.get('step'))
+    
     def _batches(self):
         assert self.rollout.size() > 1
 

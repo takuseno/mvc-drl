@@ -55,3 +55,9 @@ class EvalController(BaseController):
     def log(self):
         step = self.metrics.get('step')
         self.metrics.log_metric('eval_reward', step)
+
+    def should_save(self):
+        return False
+
+    def save(self):
+        raise Exception('EvalController does not save parameters')

@@ -47,6 +47,12 @@ class DummyMetrics(Metrics):
     def reset(self):
         pass
 
+    def should_save(self):
+        pass
+
+    def save(self):
+        pass
+
 def make_output():
     action = np.random.random((4, 4))
     log_prob = np.random.random((4, 4))
@@ -234,3 +240,32 @@ class PPOControllerTest(unittest.TestCase):
         metrics.get = MagicMock(return_value=10)
         assert controller.is_finished()
         metrics.get.assert_called_once_with('step')
+
+    def test_should_save(self):
+        rollout = Rollout()
+        network = DummyNetwork()
+        metrics = DummyMetrics()
+        controller = PPOController(network, rollout, metrics, num_envs=4,
+                                   time_horizon=128, epoch=4, batch_size=32,
+                                   gamma=0.99, lam=0.9, save_interval=100)
+
+        metrics.get = MagicMock(return_value=np.random.randint(100))
+        assert not controller.should_save()
+        metrics.get = MagicMock(return_value=np.random.randint(10) * 100)
+        assert controller.should_save()
+
+    def test_save(self):
+        rollout = Rollout()
+        network = DummyNetwork()
+        metrics = DummyMetrics()
+        controller = PPOController(network, rollout, metrics, num_envs=4,
+                                   time_horizon=128, epoch=4, batch_size=32,
+                                   gamma=0.99, lam=0.9)
+
+        step = np.random.randint(10)
+        metrics.get = MagicMock(return_value=step)
+        metrics.save_model = MagicMock()
+        controller.save()
+
+        metrics.get.assert_called_once_with('step')
+        metrics.save_model.assert_called_once_with(step)

@@ -23,6 +23,11 @@ class DummyController:
     def log(self):
         pass
 
+    def should_save(self):
+        pass
+
+    def save(self):
+        pass
 
 class ViewTest(unittest.TestCase):
     def test_step_without_update(self):
@@ -68,6 +73,28 @@ class ViewTest(unittest.TestCase):
         controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
         controller.log.assert_called_once()
 
+    def test_step_without_save(self):
+        controller = DummyController()
+        view = View(controller)
+        controller.should_save = MagicMock(return_value=False)
+        controller.save = MagicMock(unsafe=True)
+        controller.step = MagicMock(return_value='action')
+
+        self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
+        controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
+        controller.save.assert_not_called()
+
+    def test_step_without_save(self):
+        controller = DummyController()
+        view = View(controller)
+        controller.should_save = MagicMock(return_value=True)
+        controller.save = MagicMock(unsafe=True)
+        controller.step = MagicMock(return_value='action')
+
+        self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
+        controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
+        controller.save.assert_called_once()
+
     def test_stop_episode(self):
         controller = DummyController()
         view = View(controller)
@@ -79,9 +106,12 @@ class ViewTest(unittest.TestCase):
     def test_is_finished(self):
         controller = DummyController()
         view = View(controller)
+        controller.save = MagicMock()
 
         controller.is_finished = MagicMock(return_value=False)
         assert not view.is_finished()
+        controller.save.assert_not_called()
 
         controller.is_finished = MagicMock(return_value=True)
         assert view.is_finished()
+        controller.save.assert_called_once()
