@@ -59,5 +59,8 @@ class EvalController(BaseController):
     def should_save(self):
         return False
 
+    def should_eval(self):
+        return False
+
     def save(self):
         raise Exception('EvalController does not save parameters')

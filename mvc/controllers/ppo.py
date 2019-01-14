@@ -18,9 +18,10 @@ class PPOController(BaseController):
                  batch_size,
                  gamma,
                  lam,
+                 final_steps=10 ** 6,
                  log_interval=None,
                  save_interval=10 ** 5,
-                 final_steps=10 ** 6):
+                 eval_interval=10 ** 5):
         assert isinstance(network, BaseNetwork)
         assert isinstance(rollout, Rollout)
         assert isinstance(metrics, Metrics)
@@ -34,13 +35,14 @@ class PPOController(BaseController):
         self.batch_size = batch_size
         self.gamma = gamma
         self.lam = lam
-        self.log_interval = time_horizon if not log_interval else log_interval
-        self.save_interval = save_interval
-        self.final_steps = final_steps
 
         self.metrics.register('step', 'single')
         self.metrics.register('loss', 'queue')
         self.metrics.register('reward', 'queue')
+
+        log_interval = time_horizon if not log_interval else log_interval
+        super().__init__(metrics, final_steps, log_interval,
+                         save_interval, eval_interval)
 
     def step(self, obs, reward, done, info):
         # infer action, policy, value
@@ -82,9 +84,6 @@ class PPOController(BaseController):
 
         return mean_loss
 
-    def should_log(self):
-        return self.metrics.get('step') % self.log_interval == 0
-
     def log(self):
         step = self.metrics.get('step')
         self.metrics.log_metric('reward', step)
@@ -93,15 +92,6 @@ class PPOController(BaseController):
     def stop_episode(self, obs, reward, info):
         pass
 
-    def is_finished(self):
-        return self.metrics.get('step') >= self.final_steps
-
-    def should_save(self):
-        return self.metrics.get('step') % self.save_interval == 0
-
-    def save(self):
-        self.metrics.save_model(self.metrics.get('step'))
-    
     def _batches(self):
         assert self.rollout.size() > 1
 
