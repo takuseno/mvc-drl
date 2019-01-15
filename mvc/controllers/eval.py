@@ -18,6 +18,8 @@ class EvalController(BaseController):
         self.metrics.register('eval_reward', 'queue')
         self.metrics.register('eval_episode', 'single')
 
+        super().__init__(metrics, None, None, None, None)
+
     def step(self, obs, reward, done, info):
         output = self.network.infer(obs_t=obs)
 
@@ -44,7 +46,7 @@ class EvalController(BaseController):
 
     def should_log(self):
         return False
-    
+
     def log(self):
         raise Exception('EvalController does not log intermediate data')
 

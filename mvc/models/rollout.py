@@ -1,5 +1,7 @@
 import numpy as np
 
+from mvc.preprocess import compute_returns, compute_gae
+
 
 class Rollout:
     def __init__(self):
@@ -36,14 +38,29 @@ class Rollout:
         self.log_probs_t = []
         self.terminals_t = []
 
-    def fetch(self):
+    def fetch(self, gamma, lam):
+        assert self.size() > 1
+
+        step_length = self.size() - 1
+        obs_t = np.array(self.obs_t)[:step_length]
+        actions_t = np.array(self.actions_t)[:step_length]
+        rewards_tp1 = np.array(self.rewards_t)[1:step_length + 1]
+        terminals_tp1 = np.array(self.terminals_t)[1:step_length + 1]
+        values_t = np.array(self.values_t)[:step_length]
+        log_probs_t = np.array(self.log_probs_t)[:step_length]
+        bootstrap_value = self.values_t[step_length]
+
+        returns_t = compute_returns(bootstrap_value, rewards_tp1,
+                                    terminals_tp1, gamma)
+        advantages_t = compute_gae(bootstrap_value, rewards_tp1, values_t,
+                                   terminals_tp1, gamma, lam)
+
         return {
-            'obs_t': np.array(self.obs_t),
-            'actions_t': np.array(self.actions_t),
-            'rewards_t': np.array(self.rewards_t),
-            'terminals_t': np.array(self.terminals_t),
-            'values_t': np.array(self.values_t),
-            'log_probs_t': np.array(self.log_probs_t)
+            'obs_t': obs_t,
+            'actions_t': actions_t,
+            'log_probs_t': log_probs_t,
+            'returns_t': returns_t,
+            'advantages_t': advantages_t
         }
 
     def size(self):

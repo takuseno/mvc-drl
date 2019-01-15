@@ -13,7 +13,7 @@ class BaseControllerTest(TestCase):
         controller = BaseController(metrics, 110, 120, 130, 140)
 
         with pytest.raises(NotImplementedError):
-            controller.step('obs', 'reward', 'done')
+            controller.step('obs', 'reward', 'done', 'info')
 
     def test_should_update(self):
         metrics = Metrics('test')
@@ -34,7 +34,7 @@ class BaseControllerTest(TestCase):
         controller = BaseController(metrics, 110, 120, 130, 140)
 
         with pytest.raises(NotImplementedError):
-            controller.stop_episode('obs', 'reward')
+            controller.stop_episode('obs', 'reward', 'info')
 
     def test_should_log(self):
         metrics = Metrics('test')

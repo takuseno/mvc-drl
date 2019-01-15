@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import unittest
 
+from mvc.preprocess import compute_returns, compute_gae
 from mvc.models.rollout import Rollout
 
 
@@ -89,26 +90,24 @@ class RolloutTest(unittest.TestCase):
             insert_inputs_to_rollout(inputs, rollout)
 
     def test_fetch(self):
+        gamma = np.random.random()
+        lam = np.random.random()
         rollout = Rollout()
         inputs1 = make_inputs()
         insert_inputs_to_rollout(inputs1, rollout)
-        trajectory = rollout.fetch()
-        assert np.all(inputs1['obs_t'] == trajectory['obs_t'][0])
-        assert np.all(inputs1['reward_t'] == trajectory['rewards_t'][0])
-        assert np.all(inputs1['action_t'] == trajectory['actions_t'][0])
-        assert np.all(inputs1['value_t'] == trajectory['values_t'][0])
-        assert np.all(inputs1['log_prob_t'] == trajectory['log_probs_t'][0])
-        assert np.all(inputs1['terminal_t'] == trajectory['terminals_t'][0])
+
+        with pytest.raises(AssertionError):
+            rollout.fetch(gamma, lam)
 
         inputs2 = make_inputs()
         insert_inputs_to_rollout(inputs2, rollout)
-        trajectory = rollout.fetch()
-        assert np.all(inputs2['obs_t'] == trajectory['obs_t'][1])
-        assert np.all(inputs2['reward_t'] == trajectory['rewards_t'][1])
-        assert np.all(inputs2['action_t'] == trajectory['actions_t'][1])
-        assert np.all(inputs2['value_t'] == trajectory['values_t'][1])
-        assert np.all(inputs2['log_prob_t'] == trajectory['log_probs_t'][1])
-        assert np.all(inputs2['terminal_t'] == trajectory['terminals_t'][1])
+        trajectory = rollout.fetch(gamma, lam)
+
+        assert np.all(inputs1['obs_t'] == trajectory['obs_t'][0])
+        assert np.all(inputs1['action_t'] == trajectory['actions_t'][0])
+        assert np.all(inputs1['log_prob_t'] == trajectory['log_probs_t'][0])
+        assert trajectory['returns_t'].shape == (1, 4)
+        assert trajectory['advantages_t'].shape == (1, 4)
     
     def test_size(self):
         rollout = Rollout()

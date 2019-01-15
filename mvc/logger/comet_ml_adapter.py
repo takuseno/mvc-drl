@@ -4,7 +4,8 @@ from mvc.logger.base_adapter import BaseAdapter
 
 class CometMlAdapter(BaseAdapter):
     def __init__(self, api_key, project_name, experiment_name):
-        self.experiment = Experiment(api_key=api_key, project_name=project_name)
+        self.experiment = Experiment(api_key=api_key,
+                                     project_name=project_name)
         self.experiment.set_name(experiment_name)
 
     def log_parameters(self, hyper_params):

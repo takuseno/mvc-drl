@@ -1,5 +1,3 @@
-import json
-
 from visdom import Visdom
 from mvc.logger.base_adapter import BaseAdapter
 
@@ -10,6 +8,7 @@ def dict_to_html(params):
         html += '<tr><th>{}</th><td>{}</td></tr>'.format(key, value)
     html += '</table>'
     return html
+
 
 class VisdomAdapter(BaseAdapter):
     def __init__(self, host, environment, experiment_name, port=8097):

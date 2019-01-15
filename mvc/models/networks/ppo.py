@@ -12,10 +12,12 @@ def build_value_loss(values, returns, value_factor):
         loss = tf.reduce_mean((returns - values) ** 2)
         return value_factor * loss
 
+
 def build_entropy_loss(dist, entropy_factor):
     with tf.variable_scope('entropy'):
         entropy = -tf.reduce_mean(dist.entropy())
         return entropy_factor * entropy
+
 
 def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
     assert len(log_probs.shape) == 2
@@ -32,6 +34,7 @@ def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
         surr = tf.minimum(surr1, surr2)
         loss = -tf.reduce_mean(surr)
     return loss
+
 
 class PPONetwork(BaseNetwork):
     def __init__(self,
@@ -66,7 +69,8 @@ class PPONetwork(BaseNetwork):
             self.old_log_probs_ph: kwargs['log_probs_t']
         }
         sess = tf.get_default_session()
-        return sess.run([self.loss, self.optimize_expr], feed_dict=feed_dict)[0]
+        opts = [self.loss, self.optimize_expr]
+        return sess.run(opts, feed_dict=feed_dict)[0]
 
     def _build(self,
                function,

@@ -9,7 +9,7 @@ from mvc.models.networks.ppo import PPONetwork
 from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.view import View
-from mvc.interaction import BatchInteraction
+from mvc.interaction import batch_interact
 from mvc.parametric_function import stochastic_function
 
 
@@ -54,8 +54,7 @@ def main(args):
         if args.load is not None:
             saver.restore(sess, args.load)
 
-        interaction = BatchInteraction(env, view, eval_env, eval_view)
-        interaction.loop()
+        batch_interact(env, view, eval_env, eval_view)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -11,15 +11,16 @@ class BaseController:
         self.save_interval = save_interval
         self.eval_interval = eval_interval
 
-    def step(self, obs, reward, done):
+    def step(self, obs, reward, done, info):
         raise NotImplementedError('implement step function')
 
     def should_update(self):
         raise NotImplementedError('implement should_update function')
 
-    def update(self): raise NotImplementedError('implement update function')
+    def update(self):
+        raise NotImplementedError('implement update function')
 
-    def stop_episode(self, obs, reward):
+    def stop_episode(self, obs, reward, info):
         raise NotImplementedError('implement update function')
 
     def should_log(self):

@@ -7,7 +7,7 @@ class BaseNetwork:
             assert key in kwargs, key + ' does not exist in the arguments'
         output = self._infer(**kwargs)
 
-        assert isinstance(output, ActionOutput), 'action should be instance of Action'
+        assert isinstance(output, ActionOutput)
 
         return output
 
@@ -27,5 +27,3 @@ class BaseNetwork:
 
     def _update_arguments(self):
         raise NotImplementedError()
-
-

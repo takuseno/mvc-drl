@@ -13,12 +13,14 @@ def compute_returns(bootstrap_value, rewards, terminals, gamma):
             'bootstrap_value must have column length of rewards'
 
     returns = []
-    R = bootstrap_value
+    return_tp1 = bootstrap_value
     for i in reversed(range(rewards.shape[0])):
-        R = rewards[i] + (1.0 - terminals[i]) * gamma * R
-        returns.append(R)
+        return_t = rewards[i] + (1.0 - terminals[i]) * gamma * return_tp1
+        returns.append(return_t)
+        return_tp1 = return_t
     returns = reversed(returns)
     return np.array(list(returns))
+
 
 def compute_gae(bootstrap_value, rewards, values, terminals, gamma, lam):
     assert isinstance(rewards, np.ndarray), 'rewards must be ndarray'
@@ -38,15 +40,16 @@ def compute_gae(bootstrap_value, rewards, values, terminals, gamma, lam):
     # compute delta
     deltas = []
     for i in reversed(range(rewards.shape[0])):
-        V = rewards[i] + (1.0 - terminals[i]) * gamma * values[i + 1]
-        delta = V - values[i]
+        return_t = rewards[i] + (1.0 - terminals[i]) * gamma * values[i + 1]
+        delta = return_t - values[i]
         deltas.append(delta)
     deltas = np.array(list(reversed(deltas)))
     # compute gae
-    A = deltas[-1]
-    advantages = [A]
+    adv_tp1 = deltas[-1]
+    advantages = [adv_tp1]
     for i in reversed(range(deltas.shape[0] - 1)):
-        A = deltas[i] + (1.0 - terminals[i]) * gamma * lam * A
-        advantages.append(A)
+        adv_t = deltas[i] + (1.0 - terminals[i]) * gamma * lam * adv_tp1
+        advantages.append(adv_t)
+        adv_tp1 = adv_t
     advantages = reversed(advantages)
     return np.array(list(advantages))

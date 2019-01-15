@@ -1,18 +1,20 @@
-import tensorflow as tf
 import json
 import csv
 import logging
 import os
 
 from datetime import datetime
+
+import tensorflow as tf
+
 from mvc.logger.visdom_adapter import VisdomAdapter
 # from mvc.logger.comet_ml_adapter import CometMlAdapter
 
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-setting = {
+SETTING = {
     'path': 'logs',
     'adapter': None,
     'verbose': True,
@@ -21,32 +23,38 @@ setting = {
     'disable': False
 }
 
+
 def _get_dir():
-    return os.path.join(setting['path'], setting['experiment_name'])
+    return os.path.join(SETTING['path'], SETTING['experiment_name'])
+
 
 def _prepare_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+
 def _write_csv(name, metric, step):
-    if name not in setting['writers']:
+    if name not in SETTING['writers']:
         directory = _get_dir()
         _prepare_dir(directory)
         path = os.path.join(directory, name + '.csv')
         file = open(path, 'w')
-        setting['writers'][name] = csv.writer(file, lineterminator='\n')
-    setting['writers'][name].writerow([step, metric])
+        SETTING['writers'][name] = csv.writer(file, lineterminator='\n')
+    SETTING['writers'][name].writerow([step, metric])
+
 
 def _write_hyper_params(parameters):
     directory = _get_dir()
     _prepare_dir(directory)
     path = os.path.join(directory, 'hyper_params.json')
-    with open(path, 'w') as f:
-        f.write(json.dumps(parameters, indent=2))
+    with open(path, 'w') as file:
+        file.write(json.dumps(parameters, indent=2))
+
 
 def _load_config(path):
-    with open(path, 'r') as f:
-        return json.loads(f.read())
+    with open(path, 'r') as file:
+        return json.loads(file.read())
+
 
 def set_adapter(adapter, experiment_name, config_path='config.json'):
     config = _load_config(config_path)
@@ -54,54 +62,58 @@ def set_adapter(adapter, experiment_name, config_path='config.json'):
     set_experiment_name(experiment_name)
 
     if adapter == 'visdom':
-        setting['adapter'] = VisdomAdapter(
+        SETTING['adapter'] = VisdomAdapter(
             host=config['visdom']['host'], port=config['visdom']['port'],
             environment=config['visdom']['environment'],
-            experiment_name=setting['experiment_name'])
+            experiment_name=SETTING['experiment_name'])
     elif adapter == 'comet_ml':
-        # setting['adapter'] = CometMlAdapter(
-        #     config['comet_ml']['api_key'], config['comet_ml']['project_name'],
-        #     experiment_name)
         assert KeyError('comet ml is not supported for this version')
     else:
         raise KeyError()
 
+
 def set_experiment_name(experiment_name):
     date = datetime.now().strftime('%Y%m%d%H%M%S')
-    setting['experiment_name'] = experiment_name + '_' + date
+    SETTING['experiment_name'] = experiment_name + '_' + date
+
 
 def set_verbose(verbose):
-    setting[verbose] = verbose
+    SETTING[verbose] = verbose
+
 
 def enable():
-    setting['disable'] = False
+    SETTING['disable'] = False
+
 
 def disable():
-    setting['disable'] = True
+    SETTING['disable'] = True
+
 
 def log_parameters(hyper_params):
     assert isinstance(hyper_params, dict)
-    assert setting['experiment_name'] is not None
-    if setting['disable']:
+    assert SETTING['experiment_name'] is not None
+    if SETTING['disable']:
         return
 
-    if setting['adapter'] is not None:
-        setting['adapter'].log_parameters(hyper_params)
+    if SETTING['adapter'] is not None:
+        SETTING['adapter'].log_parameters(hyper_params)
 
-    if setting['verbose']:
+    if SETTING['verbose']:
         for key, value in hyper_params.items():
-            logger.debug('{}={}'.format(key, value))
+            LOGGER.debug('%s=%s', key, value)
 
     _write_hyper_params(hyper_params)
 
+
 def set_model_graph(graph):
-    if setting['disable']:
+    if SETTING['disable']:
         return
-    if setting['adapter'] is not None:
-        setting['adapter'].set_model_path(graph)
+    if SETTING['adapter'] is not None:
+        SETTING['adapter'].set_model_path(graph)
+
 
 def save_model(saver, step):
-    if setting['disable']:
+    if SETTING['disable']:
         return
     sess = tf.get_default_session()
     directory = _get_dir()
@@ -109,17 +121,18 @@ def save_model(saver, step):
     path = os.path.join(directory, 'model.ckpt')
     saver.save(sess, path, global_step=step)
 
+
 def log_metric(name, metric, step):
     assert isinstance(name, str)
     assert isinstance(step, int)
-    assert setting['experiment_name'] is not None
-    if setting['disable']:
+    assert SETTING['experiment_name'] is not None
+    if SETTING['disable']:
         return
 
-    if setting['adapter'] is not None:
-        setting['adapter'].log_metric(name, metric, step)
+    if SETTING['adapter'] is not None:
+        SETTING['adapter'].log_metric(name, metric, step)
 
-    if setting['verbose']:
-        logger.debug('step={} {}={}'.format(step, name, metric))
+    if SETTING['verbose']:
+        LOGGER.debug('step=%d %s=%f', step, name, metric)
 
     _write_csv(name, metric, step)

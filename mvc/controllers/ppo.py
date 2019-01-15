@@ -4,7 +4,6 @@ from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.controllers.base_controller import BaseController
-from mvc.preprocess import compute_returns, compute_gae
 
 
 class PPOController(BaseController):
@@ -93,50 +92,28 @@ class PPOController(BaseController):
         pass
 
     def _batches(self):
-        assert self.rollout.size() > 1
-
-        trajectory = self.rollout.fetch()
-        step_length = self.rollout.size() - 1
-        obs_t = trajectory['obs_t'][:step_length]
-        actions_t = trajectory['actions_t'][:step_length]
-        log_probs_t = trajectory['log_probs_t'][:step_length]
-        values_t = trajectory['values_t'][:step_length]
-        rewards_tp1 = trajectory['rewards_t'][1:step_length + 1]
-        terminals_tp1 = trajectory['terminals_t'][1:step_length + 1]
-        bootstrap_value = trajectory['values_t'][step_length]
-
-        returns_t = compute_returns(bootstrap_value, rewards_tp1,
-                                    terminals_tp1, self.gamma)
-        advantages_t = compute_gae(bootstrap_value, rewards_tp1, values_t,
-                                   terminals_tp1, self.gamma, self.lam)
+        traj = self.rollout.fetch(self.gamma, self.lam)
 
         # flatten
         data_size = self.time_horizon * self.num_envs
-        flat_obs_t = np.reshape(obs_t, (data_size,) + obs_t.shape[2:])
-        flat_actions_t = np.reshape(actions_t, (data_size, -1))
-        flat_log_probs_t = np.reshape(log_probs_t, (data_size, -1))
-        flat_returns_t = np.reshape(returns_t, (-1,))
-        flat_advantages_t = np.reshape(advantages_t, (-1,))
-
-        # shuffle
-        indices = np.random.permutation(np.arange(data_size))
-        shuffled_obs_t = flat_obs_t[indices]
-        shuffled_actions_t = flat_actions_t[indices]
-        shuffled_log_probs_t = flat_log_probs_t[indices]
-        shuffled_returns_t = flat_returns_t[indices]
-        shuffled_advantages_t = flat_advantages_t[indices]
+        state_shape = traj['obs_t'].shape[2:]
+        flat_obs_t = np.reshape(traj['obs_t'], (data_size,) + state_shape)
+        flat_actions_t = np.reshape(traj['actions_t'], (data_size, -1))
+        flat_log_probs_t = np.reshape(traj['log_probs_t'], (data_size, -1))
+        flat_returns_t = np.reshape(traj['returns_t'], (-1,))
+        flat_advantages_t = np.reshape(traj['advantages_t'], (-1,))
 
         # create batch data
+        indices = np.random.permutation(np.arange(data_size))
         batches = []
         for i in range(data_size // self.batch_size):
-            start = self.batch_size * i
-            end = self.batch_size * (i + 1)
+            index = indices[self.batch_size * i:self.batch_size * (i + 1)]
             batch = {
-                'obs_t': shuffled_obs_t[start:end],
-                'actions_t': shuffled_actions_t[start:end],
-                'log_probs_t': shuffled_log_probs_t[start:end],
-                'returns_t': shuffled_returns_t[start:end],
-                'advantages_t': shuffled_advantages_t[start:end]
+                'obs_t': flat_obs_t[index],
+                'actions_t': flat_actions_t[index],
+                'log_probs_t': flat_log_probs_t[index],
+                'returns_t': flat_returns_t[index],
+                'advantages_t': flat_advantages_t[index]
             }
             batches.append(batch)
 
