@@ -1,3 +1,5 @@
+import socket
+
 from visdom import Visdom
 from mvc.logger.base_adapter import BaseAdapter
 
@@ -17,6 +19,7 @@ class VisdomAdapter(BaseAdapter):
 
     def log_parameters(self, hyper_params):
         hyper_params['experiment_name'] = self.name
+        hyper_params['host'] = socket.gethostname()
         html = dict_to_html(hyper_params)
         self.visdom.text(html)
 
