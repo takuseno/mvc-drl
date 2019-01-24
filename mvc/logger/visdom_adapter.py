@@ -33,3 +33,6 @@ class VisdomAdapter(BaseAdapter):
         }
         self.visdom.line([metric], [step], name=self.name,
                          update='append', win=name, opts=opts)
+
+    def register(self, name):
+        pass

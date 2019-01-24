@@ -24,6 +24,8 @@ class Metrics:
         else:
             raise KeyError()
 
+        logger.register(name)
+
     def add(self, name, value):
         self._check_name(name)
         self.metrics[name].add(value)
@@ -41,6 +43,9 @@ class Metrics:
 
     def log_parameters(self, hyper_params):
         logger.log_parameters(hyper_params)
+
+    def set_model_graph(self, graph):
+        logger.set_model_graph(graph)
 
     def save_model(self, step):
         if self.saver is not None:

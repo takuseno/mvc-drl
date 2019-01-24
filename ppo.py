@@ -51,6 +51,9 @@ def main(args):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
+        # save model graph for debugging
+        metrics.set_model_graph(sess.graph)
+
         if args.load is not None:
             saver.restore(sess, args.load)
 

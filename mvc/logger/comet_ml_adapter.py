@@ -16,3 +16,6 @@ class CometMlAdapter(BaseAdapter):
 
     def log_metric(self, name, metric, step):
         self.experiment.log_metric(name, metric, step=step)
+
+    def register(self, name):
+        pass

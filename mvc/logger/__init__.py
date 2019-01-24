@@ -8,6 +8,7 @@ from datetime import datetime
 import tensorflow as tf
 
 from mvc.logger.visdom_adapter import VisdomAdapter
+from mvc.logger.tfboard_adapter import TfBoardAdapter
 # from mvc.logger.comet_ml_adapter import CometMlAdapter
 
 
@@ -66,6 +67,8 @@ def set_adapter(adapter, experiment_name, config_path='config.json'):
             host=config['visdom']['host'], port=config['visdom']['port'],
             environment=config['visdom']['environment'],
             experiment_name=SETTING['experiment_name'])
+    elif adapter == 'tfboard':
+        SETTING['adapter'] = TfBoardAdapter(_get_dir())
     elif adapter == 'comet_ml':
         assert KeyError('comet ml is not supported for this version')
     else:
@@ -109,7 +112,7 @@ def set_model_graph(graph):
     if SETTING['disable']:
         return
     if SETTING['adapter'] is not None:
-        SETTING['adapter'].set_model_path(graph)
+        SETTING['adapter'].set_model_graph(graph)
 
 
 def save_model(saver, step):
@@ -136,3 +139,8 @@ def log_metric(name, metric, step):
         LOGGER.debug('step=%d %s=%f', step, name, metric)
 
     _write_csv(name, metric, step)
+
+
+def register(name):
+    if SETTING['adapter'] is not None:
+        SETTING['adapter'].register(name)

@@ -7,3 +7,6 @@ class BaseAdapter:
 
     def log_metric(self, name, metric, step):
         raise NotImplementedError()
+
+    def register(self, name):
+        raise NotImplementedError()

@@ -19,22 +19,27 @@ class MetricsTest(TestCase):
         metrics = Metrics('test2', 'visdom')
         set_adapter.assert_called_once_with('visdom', 'test2')
 
+    @patch('mvc.logger.register')
     @patch('mvc.logger.set_experiment_name')
-    def test_register(self, set_experiment_name):
+    def test_register(self, set_experiment_name, register):
         metrics = Metrics('test')
 
         metrics.register('test1', 'single')
         assert isinstance(metrics.metrics['test1'], Metric)
+        register.assert_called_once_with('test1')
 
         metrics.register('test2', 'queue')
         assert isinstance(metrics.metrics['test2'], QueueMetric)
+        register.assert_called_with('test2')
 
         with pytest.raises(KeyError):
             metrics.register('test3', 'error')
+        assert register.call_count == 2
 
         metrics.register('double', 'single')
         with pytest.raises(Exception):
             metrics.register('double', 'single')
+        assert register.call_count == 3
 
     @patch('mvc.logger.set_experiment_name')
     def test_add_and_get(self, set_experiment_name):
@@ -107,3 +112,10 @@ class MetricsTest(TestCase):
         metrics = Metrics('test', saver='saver')
         metrics.save_model(step)
         save_model.assert_called_once_with('saver', step)
+    
+    @patch('mvc.logger.set_model_graph')
+    @patch('mvc.logger.set_experiment_name')
+    def test_set_model_graph(self, experiment_name, set_model_graph):
+        metrics = Metrics('test')
+        metrics.set_model_graph('test')
+        set_model_graph.assert_called_once_with('test')
