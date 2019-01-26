@@ -52,15 +52,18 @@ class Rollout:
 
         returns_t = compute_returns(bootstrap_value, rewards_tp1,
                                     terminals_tp1, gamma)
-        advantages_t = compute_gae(bootstrap_value, rewards_tp1, values_t,
-                                   terminals_tp1, gamma, lam)
+        advs_t = compute_gae(bootstrap_value, rewards_tp1, values_t,
+                             terminals_tp1, gamma, lam)
+
+        # normalize advantage
+        advs_t = (advs_t - np.mean(advs_t)) / (np.std(advs_t) + 1e-8)
 
         return {
             'obs_t': obs_t,
             'actions_t': actions_t,
             'log_probs_t': log_probs_t,
             'returns_t': returns_t,
-            'advantages_t': advantages_t
+            'advantages_t': advs_t
         }
 
     def size(self):
