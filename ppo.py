@@ -93,10 +93,10 @@ if __name__ == '__main__':
                         help='experiment name')
     parser.add_argument('--log-adapter', type=str,
                         help='log adapter (visdom, comet_ml)')
-    parser.add_argument('--save-interval', type=int, default=2048 * 100,
+    parser.add_argument('--save-interval', type=int, default=2048 * 50,
                         help='interval of saving parameters')
     parser.add_argument('--load', type=str, help='path to model')
-    parser.add_argument('--eval-interval', type=int, default=2048 * 100,
+    parser.add_argument('--eval-interval', type=int, default=2048 * 10,
                         help='interval of evaluation')
     parser.add_argument('--eval-episodes', type=int, default=10,
                         help='the number of evaluation episode')
