@@ -61,7 +61,7 @@ def value_function(fcs, inpt, w_init=None, last_w_init=None):
     return value
 
 
-def stochastic_function(fcs, num_actions, scope, w_init=None):
+def stochastic_function(fcs, num_actions, scope):
     def func(inpt):
         def initializer(scale):
             input_dim = int(inpt.shape[1])
@@ -72,6 +72,7 @@ def stochastic_function(fcs, num_actions, scope, w_init=None):
             policy = stochastic_policy_function(
                 fcs, inpt, num_actions, w_init=initializer(1.0),
                 last_w_init=initializer(0.01))
-            value = value_function(fcs, inpt, w_init, initializer(1.0))
+            value = value_function(
+                fcs, inpt, initializer(1.0), initializer(1.0))
         return policy, value
     return func

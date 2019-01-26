@@ -221,9 +221,8 @@ class StochasticFunctionTest(tf.test.TestCase):
         inpt = make_inpt()
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
-        w_init = tf.random_uniform_initializer(-0.1, 0.1)
 
-        func = stochastic_function(fcs, num_actions, 'scope', w_init)
+        func = stochastic_function(fcs, num_actions, 'scope')
 
         policy, value = func(inpt)
 
@@ -236,10 +235,12 @@ class StochasticFunctionTest(tf.test.TestCase):
         assert int(value.shape[0]) == int(inpt.shape[0])
         assert int(value.shape[1]) == 1
 
-        policy_hiddens = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/policy/hiddens')
+        policy_hiddens = tf.get_collection(
+            tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/policy/hiddens')
         assert_hidden_variable_shape(policy_hiddens, inpt, fcs)
 
-        value_hiddens = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/value/hiddens')
+        value_hiddens = tf.get_collection(
+            tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/value/hiddens')
         assert_hidden_variable_shape(value_hiddens, inpt, fcs)
 
         variable = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope')
@@ -250,11 +251,6 @@ class StochasticFunctionTest(tf.test.TestCase):
             before = sess.run(variable)
             before_policy_hiddens = sess.run(policy_hiddens)
             before_value_hiddens = sess.run(value_hiddens)
-
-            for var in before_policy_hiddens:
-                assert_variable_range(var, -0.1, 0.1)
-            for var in before_value_hiddens:
-                assert_variable_range(var, -0.1, 0.1)
 
             sess.run(optimize_expr)
 
