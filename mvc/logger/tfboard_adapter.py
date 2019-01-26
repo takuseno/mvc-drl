@@ -8,6 +8,7 @@ class TfBoardAdapter(BaseAdapter):
         self.logdir = logdir
         self.placeholders = {}
         self.summaries = {}
+        self.writer = None
 
     def log_parameters(self, hyper_params):
         pass
@@ -16,6 +17,8 @@ class TfBoardAdapter(BaseAdapter):
         self.writer = tf.summary.FileWriter(self.logdir, graph)
 
     def log_metric(self, name, metric, step):
+        assert self.writer is not None, 'call set_model_graph first'
+
         sess = tf.get_default_session()
         placeholder = self.placeholders[name]
         summary = self.summaries[name]
