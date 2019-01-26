@@ -35,3 +35,20 @@ class BatchEnvWrapper:
         for env in self.envs:
             obs_t.append(env.reset())
         return np.array(obs_t)
+
+
+class MuJoCoWrapper:
+    def __init__(self, env):
+        self.env = env
+        self.action_space = env.action_space
+        self.observation_space = env.observation_space
+
+    def step(self, action):
+        high = self.action_space.high
+        return self.env.step(action * high)
+
+    def reset(self):
+        return self.env.reset()
+
+    def render(self, mode='human'):
+        return self.env.render(mode)

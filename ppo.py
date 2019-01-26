@@ -2,7 +2,7 @@ import tensorflow as tf
 import argparse
 import gym
 
-from mvc.envs.wrappers import BatchEnvWrapper
+from mvc.envs.wrappers import BatchEnvWrapper, MuJoCoWrapper
 from mvc.controllers.ppo import PPOController
 from mvc.controllers.eval import EvalController
 from mvc.models.networks.ppo import PPONetwork
@@ -14,7 +14,7 @@ from mvc.parametric_function import stochastic_function
 
 
 def make_envs(env_name, num_envs):
-    return [gym.make(env_name) for _ in range(num_envs)]
+    return [MuJoCoWrapper(gym.make(env_name)) for _ in range(num_envs)]
 
 def main(args):
     env = BatchEnvWrapper(
