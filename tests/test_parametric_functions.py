@@ -6,7 +6,7 @@ from mvc.parametric_function import _make_fcs
 from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import deterministic_policy_function
 from mvc.parametric_function import value_function
-from mvc.parametric_function import stochastic_function
+from mvc.parametric_function import ppo_function
 
 
 def make_inpt():
@@ -149,7 +149,8 @@ class DeterministicPolicyFunctionTest(tf.test.TestCase):
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
 
         policy = deterministic_policy_function(
-            fcs, inpt, num_actions, w_init=w_init, last_w_init=w_init)
+            fcs, inpt, num_actions, w_init=w_init,
+            last_w_init=w_init, last_b_init=w_init)
 
         # to check connection
         optimizer = tf.train.AdamOptimizer(1e-4)
@@ -216,13 +217,13 @@ class ValueFunctionTest(tf.test.TestCase):
             after = sess.run(variable)
             assert_variable_mismatch(before, after)
 
-class StochasticFunctionTest(tf.test.TestCase):
-    def test_stochastic_function(self):
+class PPOFunctionTest(tf.test.TestCase):
+    def test_ppo_function(self):
         inpt = make_inpt()
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
 
-        func = stochastic_function(fcs, num_actions, 'scope')
+        func = ppo_function(fcs, num_actions, 'scope')
 
         policy, value = func(inpt)
 

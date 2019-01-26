@@ -10,7 +10,7 @@ from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.view import View
 from mvc.interaction import batch_interact
-from mvc.parametric_function import stochastic_function
+from mvc.parametric_function import ppo_function
 
 
 def make_envs(env_name, num_envs):
@@ -23,7 +23,7 @@ def main(args):
 
     num_actions = env.action_space.shape[0]
 
-    function = stochastic_function(args.layers, num_actions, 'ppo')
+    function = ppo_function(args.layers, num_actions, 'ppo')
 
     network = PPONetwork(function, env.observation_space.shape, args.num_envs,
                          num_actions, args.batch_size, args.epsilon,
