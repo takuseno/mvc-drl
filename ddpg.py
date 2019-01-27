@@ -17,7 +17,7 @@ from mvc.interaction import interact
 
 def main(args):
     # environment
-    env = MuJoCoWrapper(gym.make(args.env))
+    env = MuJoCoWrapper(gym.make(args.env), args.render)
     eval_env = MuJoCoWrapper(gym.make(args.env))
     num_actions = env.action_space.shape[0]
 
