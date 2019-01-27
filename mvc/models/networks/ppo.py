@@ -1,7 +1,27 @@
+import numpy as np
 import tensorflow as tf
 
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.action_output import ActionOutput
+from mvc.parametric_function import stochastic_policy_function
+from mvc.parametric_function import value_function
+
+
+def ppo_function(fcs, num_actions, scope):
+    def func(inpt):
+        def initializer(scale):
+            input_dim = int(inpt.shape[1])
+            stddev = np.sqrt(scale / input_dim)
+            return tf.random_normal_initializer(stddev=stddev)
+
+        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
+            policy = stochastic_policy_function(
+                fcs, inpt, num_actions, tf.nn.tanh, w_init=initializer(1.0),
+                last_w_init=initializer(0.01))
+            value = value_function(
+                fcs, inpt, tf.nn.tanh, initializer(1.0), initializer(1.0))
+        return policy, value
+    return func
 
 
 def build_value_loss(values, returns, value_factor):

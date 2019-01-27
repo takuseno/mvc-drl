@@ -7,43 +7,16 @@ from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import deterministic_policy_function
 from mvc.parametric_function import value_function
 from mvc.parametric_function import q_function
-from mvc.parametric_function import ppo_function
 
+from tests.test_utils import make_tf_inpt, make_fcs, mock_activation
+from tests.test_utils import assert_hidden_variable_shape
+from tests.test_utils import assert_variable_range
+from tests.test_utils import assert_variable_mismatch
 
-def make_inpt():
-    dim1 = np.random.randint(10) + 1
-    dim2 = np.random.randint(10) + 1
-    return tf.constant(np.random.random((dim1, dim2)), dtype=tf.float32)
-
-def make_fcs():
-    return [np.random.randint(100) + 1 for i in range(np.random.randint(5) + 1)]
-
-def mock_activation():
-    return MagicMock(side_effect=tf.nn.relu)
-
-def assert_hidden_variable_shape(variables, inpt, fcs):
-    shapes = [(int(inpt.shape[1]), fcs[0])]
-    shapes += shapes
-    for i, fc in enumerate(fcs[1:]):
-        shapes += [(fcs[i], fc)]
-        shapes += [(fcs[i], fc)]
-    for shape, variable in zip(shapes, variables):
-        if str(variable.name).find('kernel') > 0:
-            assert (int(variable.shape[0]), int(variable.shape[1])) == shape
-        else:
-            assert int(variable.shape[0]) == shape[1]
-
-def assert_variable_range(variable, min_val, max_val):
-    assert not np.any(variable < min_val)
-    assert not np.any(variable > max_val)
-
-def assert_variable_mismatch(variables1, variables2):
-    for variable1, variable2 in zip(variables1, variables2):
-        assert not np.all(variable1 == variable2)
 
 class MakeFcsTest(tf.test.TestCase):
     def test_make_fcs(self):
-        inpt = make_inpt()
+        inpt = make_tf_inpt()
         fcs = make_fcs()
         activation = mock_activation()
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
@@ -73,7 +46,7 @@ class MakeFcsTest(tf.test.TestCase):
 
 class StochasticPolicyFunctionTest(tf.test.TestCase):
     def test_with_share_false(self):
-        inpt = make_inpt()
+        inpt = make_tf_inpt()
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
@@ -120,7 +93,7 @@ class StochasticPolicyFunctionTest(tf.test.TestCase):
             assert_variable_mismatch(before, after)
 
     def test_with_share_true(self):
-        inpt = make_inpt()
+        inpt = make_tf_inpt()
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
@@ -144,7 +117,7 @@ class StochasticPolicyFunctionTest(tf.test.TestCase):
 
 class DeterministicPolicyFunctionTest(tf.test.TestCase):
     def test_deterministic_policy_function(self):
-        inpt = make_inpt()
+        inpt = make_tf_inpt()
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
@@ -183,7 +156,7 @@ class DeterministicPolicyFunctionTest(tf.test.TestCase):
 
 class ValueFunctionTest(tf.test.TestCase):
     def test_value_function(self):
-        inpt = make_inpt()
+        inpt = make_tf_inpt()
         fcs = make_fcs()
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
 
@@ -220,7 +193,7 @@ class ValueFunctionTest(tf.test.TestCase):
 
 class QFunctionTest(tf.test.TestCase):
     def test_q_function(self):
-        inpt = make_inpt()
+        inpt = make_tf_inpt()
         fcs = make_fcs()
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
         action = tf.constant(np.random.random((int(inpt.shape[0]),
@@ -261,48 +234,6 @@ class QFunctionTest(tf.test.TestCase):
             before = sess.run(variable)
             for var in before:
                 assert_variable_range(var, -0.1, 0.1)
-
-            sess.run(optimize_expr)
-
-            after = sess.run(variable)
-            assert_variable_mismatch(before, after)
-
-
-class PPOFunctionTest(tf.test.TestCase):
-    def test_ppo_function(self):
-        inpt = make_inpt()
-        fcs = make_fcs()
-        num_actions = np.random.randint(10) + 1
-
-        func = ppo_function(fcs, num_actions, 'scope')
-
-        policy, value = func(inpt)
-
-        # to check connection
-        optimizer = tf.train.AdamOptimizer(1e-4)
-        optimize_expr = optimizer.minimize(tf.reduce_mean(policy.sample(1)) + tf.reduce_mean(value))
-
-        assert int(policy.sample(1)[0].shape[0]) == int(inpt.shape[0])
-        assert int(policy.sample(1)[0].shape[1]) == num_actions
-        assert int(value.shape[0]) == int(inpt.shape[0])
-        assert int(value.shape[1]) == 1
-
-        policy_hiddens = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/policy/hiddens')
-        assert_hidden_variable_shape(policy_hiddens, inpt, fcs)
-
-        value_hiddens = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/value/hiddens')
-        assert_hidden_variable_shape(value_hiddens, inpt, fcs)
-
-        variable = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope')
-
-        with self.test_session() as sess:
-            sess.run(tf.global_variables_initializer())
-
-            before = sess.run(variable)
-            before_policy_hiddens = sess.run(policy_hiddens)
-            before_value_hiddens = sess.run(value_hiddens)
 
             sess.run(optimize_expr)
 

@@ -97,20 +97,3 @@ def q_function(fcs,
                                 bias_initializer=last_b_init,
                                 name='output')
     return value
-
-
-def ppo_function(fcs, num_actions, scope):
-    def func(inpt):
-        def initializer(scale):
-            input_dim = int(inpt.shape[1])
-            stddev = np.sqrt(scale / input_dim)
-            return tf.random_normal_initializer(stddev=stddev)
-
-        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
-            policy = stochastic_policy_function(
-                fcs, inpt, num_actions, tf.nn.tanh, w_init=initializer(1.0),
-                last_w_init=initializer(0.01))
-            value = value_function(
-                fcs, inpt, tf.nn.tanh, initializer(1.0), initializer(1.0))
-        return policy, value
-    return func

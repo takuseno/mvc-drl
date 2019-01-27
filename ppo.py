@@ -6,11 +6,11 @@ from mvc.envs.wrappers import BatchEnvWrapper, MuJoCoWrapper
 from mvc.controllers.ppo import PPOController
 from mvc.controllers.eval import EvalController
 from mvc.models.networks.ppo import PPONetwork
+from mvc.models.networks.ppo import ppo_function
 from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.view import View
 from mvc.interaction import batch_interact
-from mvc.parametric_function import ppo_function
 
 
 def make_envs(env_name, num_envs):
