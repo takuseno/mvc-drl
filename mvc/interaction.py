@@ -15,7 +15,7 @@ def step(env, view, obs, reward, done, info):
     return obs, reward, done, info
 
 
-def loop(env, view, hook=None):
+def batch_loop(env, view, hook=None):
     obs, reward, done, info = initial_inputs(env)
     while True:
         obs, reward, done, info = step(env, view, obs, reward, done, info)
@@ -27,7 +27,36 @@ def loop(env, view, hook=None):
             break
 
 
+def loop(env, view, hook=None):
+    while True:
+        obs = env.reset()
+        reward = 0.0
+        done = False
+        info = {}
+        while not done:
+            obs, reward, done, info = step(env, view, obs, reward, done, info)
+
+            if hook is not None:
+                hook(view)
+
+            if view.is_finished():
+                return
+
+        view.stop_episode(obs, reward, info)
+
+
 def batch_interact(env, view, eval_env=None, eval_view=None, hook=None):
+    def _hook(view):
+        if eval_view is not None and view.should_eval():
+            batch_loop(eval_env, eval_view)
+
+        if hook is not None:
+            hook(view)
+
+    batch_loop(env, view, _hook)
+
+
+def interact(env, view, eval_env=None, eval_view=None, hook=None):
     def _hook(view):
         if eval_view is not None and view.should_eval():
             loop(eval_env, eval_view)
