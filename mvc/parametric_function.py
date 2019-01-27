@@ -20,8 +20,9 @@ def stochastic_policy_function(fcs,
                                activation=tf.nn.tanh,
                                share=False,
                                w_init=None,
-                               last_w_init=None):
-    with tf.variable_scope('policy'):
+                               last_w_init=None,
+                               scope='policy'):
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         out = _make_fcs(fcs, inpt, activation, w_init)
         mean = tf.layers.dense(out, num_actions, activation=None,
                                kernel_initializer=last_w_init, name='mean')
@@ -46,11 +47,12 @@ def deterministic_policy_function(fcs,
                                   activation=tf.nn.tanh,
                                   w_init=None,
                                   last_w_init=None,
-                                  last_b_init=None):
+                                  last_b_init=None,
+                                  scope='policy'):
     if last_b_init is None:
         last_b_init = tf.zeros_initializer()
 
-    with tf.variable_scope('policy'):
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         out = _make_fcs(fcs, inpt, activation, w_init)
         policy = tf.layers.dense(out, num_actions, activation=None,
                                  kernel_initializer=last_w_init,
@@ -63,8 +65,9 @@ def value_function(fcs,
                    inpt,
                    activation=tf.nn.tanh,
                    w_init=None,
-                   last_w_init=None):
-    with tf.variable_scope('value'):
+                   last_w_init=None,
+                   scope='value'):
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         out = _make_fcs(fcs, inpt, activation, w_init)
         value = tf.layers.dense(out, 1, activation=None,
                                 kernel_initializer=last_w_init,
@@ -79,11 +82,12 @@ def q_function(fcs,
                activation=tf.nn.tanh,
                w_init=None,
                last_w_init=None,
-               last_b_init=None):
+               last_b_init=None,
+               scope='action_value'):
     if last_b_init is None:
         last_b_init = tf.zeros_initializer()
 
-    with tf.variable_scope('action_value'):
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         out = inpt
         with tf.variable_scope('hiddens'):
             for i, hidden in enumerate(fcs):
