@@ -39,3 +39,8 @@ def assert_variable_range(variable, min_val, max_val):
 def assert_variable_mismatch(variables1, variables2):
     for variable1, variable2 in zip(variables1, variables2):
         assert not np.all(variable1 == variable2)
+
+
+def assert_variable_match(variables1, variables2):
+    for variable1, variable2 in zip(variables1, variables2):
+        assert np.all(variable1 == variable2)
