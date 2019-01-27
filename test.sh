@@ -1,5 +1,5 @@
 # unit test
-pytest tests
+pytest tests -p no:warnings
 
 # pep8 check
 pycodestyle mvc
