@@ -14,26 +14,26 @@ def make_inputs():
 
 
 class BufferTest(unittest.TestCase):
-    def test_append(self):
+    def test_add(self):
         buffer = Buffer()
 
-        buffer.append(*make_inputs())
+        buffer.add(*make_inputs())
         assert buffer.size() == 1
 
-        buffer.append(*make_inputs())
+        buffer.add(*make_inputs())
         assert buffer.size() == 2
 
     def test_capacity(self):
         buffer = Buffer(2)
-        buffer.append(*make_inputs())
-        buffer.append(*make_inputs())
-        buffer.append(*make_inputs())
+        buffer.add(*make_inputs())
+        buffer.add(*make_inputs())
+        buffer.add(*make_inputs())
         assert buffer.size() == 2
 
     def test_reset(self):
         buffer = Buffer()
-        buffer.append(*make_inputs())
-        buffer.append(*make_inputs())
+        buffer.add(*make_inputs())
+        buffer.add(*make_inputs())
         buffer.reset()
         assert buffer.size() == 0
 
@@ -42,8 +42,8 @@ class BufferTest(unittest.TestCase):
         obs1, action1, reward1, done1 = make_inputs()
         obs2, action2, reward2, done2 = make_inputs()
 
-        buffer.append(obs1, action1, reward1, done1)
-        buffer.append(obs2, action2, reward2, done2)
+        buffer.add(obs1, action1, reward1, done1)
+        buffer.add(obs2, action2, reward2, done2)
 
         batch = buffer.fetch(1)
         assert np.all(batch['obs_t'][0] == obs1)
@@ -54,6 +54,6 @@ class BufferTest(unittest.TestCase):
 
     def test_fetch_with_exception(self):
         buffer = Buffer()
-        buffer.append(*make_inputs())
+        buffer.add(*make_inputs())
         with pytest.raises(AssertionError):
             buffer.fetch(2)

@@ -10,7 +10,7 @@ class Buffer:
         self.rewards_t = deque(maxlen=maxlen)
         self.dones_t = deque(maxlen=maxlen)
 
-    def append(self, obs_t, action_t, reward_t, done_t):
+    def add(self, obs_t, action_t, reward_t, done_t):
         self.obs_t.append(obs_t)
         self.actions_t.append(action_t)
         self.rewards_t.append(reward_t)
