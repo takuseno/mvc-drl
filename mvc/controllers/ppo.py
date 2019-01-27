@@ -4,6 +4,7 @@ from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.controllers.base_controller import BaseController
+from mvc.util import make_batch
 
 
 class PPOController(BaseController):
@@ -64,19 +65,16 @@ class PPOController(BaseController):
     def update(self):
         assert self.should_update()
 
-        # create batch from stored trajectories
-        batches = self._batches()
-
-        # flush stored trajectories
-        self.rollout.flush()
-
         # update parameter
         losses = []
         for _ in range(self.epoch):
-            for batch in batches:
+            for batch in self._batches():
                 loss = self.network.update(**batch)
                 losses.append(loss)
         mean_loss = np.mean(losses)
+
+        # flush stored trajectories
+        self.rollout.flush()
 
         # record metrics
         self.metrics.add('loss', mean_loss)
@@ -97,26 +95,13 @@ class PPOController(BaseController):
         # flatten
         data_size = self.time_horizon * self.num_envs
         state_shape = traj['obs_t'].shape[2:]
-        flat_obs_t = np.reshape(traj['obs_t'], (data_size,) + state_shape)
-        flat_actions_t = np.reshape(traj['actions_t'], (data_size, -1))
-        flat_log_probs_t = np.reshape(traj['log_probs_t'], (data_size, -1))
-        flat_returns_t = np.reshape(traj['returns_t'], (-1,))
-        flat_advantages_t = np.reshape(traj['advantages_t'], (-1,))
-        flat_values_t = np.reshape(traj['values_t'], (-1,))
+        data = {
+            'obs_t': np.reshape(traj['obs_t'], (data_size,) + state_shape),
+            'actions_t': np.reshape(traj['actions_t'], (data_size, -1)),
+            'log_probs_t': np.reshape(traj['log_probs_t'], (data_size, -1)),
+            'returns_t': np.reshape(traj['returns_t'], (-1,)),
+            'advantages_t': np.reshape(traj['advantages_t'], (-1,)),
+            'values_t': np.reshape(traj['values_t'], (-1,))
+        }
 
-        # create batch data
-        indices = np.random.permutation(np.arange(data_size))
-        batches = []
-        for i in range(data_size // self.batch_size):
-            index = indices[self.batch_size * i:self.batch_size * (i + 1)]
-            batch = {
-                'obs_t': flat_obs_t[index],
-                'actions_t': flat_actions_t[index],
-                'log_probs_t': flat_log_probs_t[index],
-                'returns_t': flat_returns_t[index],
-                'advantages_t': flat_advantages_t[index],
-                'values_t': flat_values_t[index]
-            }
-            batches.append(batch)
-
-        return batches
+        return make_batch(data, self.batch_size, data_size)

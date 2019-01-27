@@ -155,11 +155,10 @@ class PPOControllerTest(unittest.TestCase):
             input_history.append(inputs)
             output_history.append(output)
 
-        batches = controller._batches()
-
-        assert len(batches) == 128 * 4 // 32
-        for key in ['obs_t', 'actions_t', 'log_probs_t', 'returns_t', 'advantages_t']:
-            for batch in batches:
+        for key in ['obs_t', 'actions_t', 'log_probs_t', 'returns_t', 'advantages_t', 'values_t']:
+            count = 0
+            for batch in controller._batches():
+                count += 1
                 assert key in batch
                 assert batch[key].shape[0] == 32
                 if key == 'obs_t':
@@ -172,6 +171,9 @@ class PPOControllerTest(unittest.TestCase):
                     assert len(batch[key].shape) == 1
                 elif key == 'advantages_t':
                     assert len(batch[key].shape) == 1
+                elif key == 'values_t':
+                    assert len(batch[key].shape) == 1
+            assert count == 128 * 4 // 32
 
     def test_batch_with_short_trajectory_error(self):
         rollout = Rollout()
