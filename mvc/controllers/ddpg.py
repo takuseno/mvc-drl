@@ -39,13 +39,13 @@ class DDPGController(BaseController):
         # infer action
         output = self.network.infer(obs_t=np.array([obs]))
         # store trajectory
-        self.buffer.add(obs, output.action[0], reward, 0.0)
+        self.buffer.add(obs, output.action, reward, 0.0)
         # record metrics
         self.metrics.add('step', 1)
-        return output.action[0]
+        return output.action
 
     def should_update(self):
-        return self.buffer.size() + 1 > self.batch_size
+        return self.buffer.size() > self.batch_size
 
     def update(self):
         assert self.should_update()

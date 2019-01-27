@@ -110,9 +110,9 @@ class DDPGNetworkTest(tf.test.TestCase):
             obs = np.random.random((1,) + self.state_shape)
             output = self.network.infer(obs_t=obs)
 
-        assert output.action.shape == (1, self.num_actions)
+        assert output.action.shape == (self.num_actions,)
         assert output.log_prob is None
-        assert output.value.shape == (1,)
+        assert len(output.value.shape) == 0
 
     def test_update(self):
         obs_t = np.random.random((32,) + self.state_shape)

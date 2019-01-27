@@ -60,7 +60,7 @@ class DDPGNetwork(BaseNetwork):
         sess = tf.get_default_session()
         ops = [self.action, self.value]
         action, value = sess.run(ops, feed_dict=feed_dict)
-        return ActionOutput(action=action, log_prob=None, value=value)
+        return ActionOutput(action=action[0], log_prob=None, value=value[0])
 
     def _update(self, **kwargs):
         sess = tf.get_default_session()

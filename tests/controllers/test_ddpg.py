@@ -52,9 +52,9 @@ class DummyMetrics(Metrics):
         pass
 
 def make_output():
-    action = np.random.random((1, 4))
+    action = np.random.random((4,))
     log_prob = None
-    value = np.random.random((1, 1))
+    value = np.random.random()
     return ActionOutput(action, log_prob, value)
 
 def make_inputs():

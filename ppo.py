@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, default='experiment',
                         help='experiment name')
     parser.add_argument('--log-adapter', type=str,
-                        help='log adapter (visdom, comet_ml)')
+                        help='log adapter (visdom, tfboard)')
     parser.add_argument('--save-interval', type=int, default=2048 * 50,
                         help='interval of saving parameters')
     parser.add_argument('--load', type=str, help='path to model')

@@ -38,16 +38,28 @@ class BatchEnvWrapper:
 
 
 class MuJoCoWrapper:
-    def __init__(self, env):
+    def __init__(self, env, render=False):
         self.env = env
         self.action_space = env.action_space
         self.observation_space = env.observation_space
+        self.render = render
+        self.sum_of_rewards = 0.0
 
     def step(self, action):
         high = self.action_space.high
-        return self.env.step(action * high)
+        obs, reward, done, info = self.env.step(action * high)
+
+        if self.render:
+            self.env.render()
+
+        self.sum_of_rewards += reward
+        if done:
+            info['reward'] = self.sum_of_rewards
+
+        return obs, reward, done, info
 
     def reset(self):
+        self.sum_of_rewards = 0.0
         return self.env.reset()
 
     def render(self, mode='human'):
