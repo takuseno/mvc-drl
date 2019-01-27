@@ -32,7 +32,7 @@ class BuildValueLossTest(tf.test.TestCase):
 
         with self.test_session() as sess:
             answer = 0.5 * np.mean((nd_returns - nd_values) ** 2)
-            assert sess.run(loss) == answer
+            assert np.allclose(sess.run(loss), answer)
 
     def test_with_invalid_shape(self):
         values = tf.constant(np.random.random((4)))

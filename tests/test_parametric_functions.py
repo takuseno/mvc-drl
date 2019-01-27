@@ -6,6 +6,7 @@ from mvc.parametric_function import _make_fcs
 from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import deterministic_policy_function
 from mvc.parametric_function import value_function
+from mvc.parametric_function import q_function
 from mvc.parametric_function import ppo_function
 
 
@@ -216,6 +217,56 @@ class ValueFunctionTest(tf.test.TestCase):
 
             after = sess.run(variable)
             assert_variable_mismatch(before, after)
+
+class QFunctionTest(tf.test.TestCase):
+    def test_q_function(self):
+        inpt = make_inpt()
+        fcs = make_fcs()
+        w_init = tf.random_uniform_initializer(-0.1, 0.1)
+        action = tf.constant(np.random.random((int(inpt.shape[0]),
+                             np.random.randint(10) + 1)), dtype=tf.float32)
+        concat_index = np.random.randint(len(fcs))
+
+        value = q_function(
+            fcs, inpt, action, concat_index, w_init=w_init,
+            last_w_init=w_init, last_b_init=w_init)
+
+        # to check connection
+        optimizer = tf.train.AdamOptimizer(1e-4)
+        optimize_expr = optimizer.minimize(tf.reduce_mean(value))
+
+        assert int(value.shape[0]) == int(inpt.shape[0])
+        assert int(value.shape[1]) == 1
+
+        hiddens = tf.get_collection(
+            tf.GraphKeys.TRAINABLE_VARIABLES, 'action_value/hiddens')
+
+        concat = hiddens[concat_index * 2]
+        if concat_index == 0:
+            dim = int(inpt.shape[1])
+        else:
+            dim = fcs[concat_index - 1]
+        assert int(concat.shape[0]) == dim + int(action.shape[1])
+
+        output = tf.get_collection(
+            tf.GraphKeys.TRAINABLE_VARIABLES, 'action_value/output')[0]
+        assert int(output.shape[0]) == fcs[-1]
+        assert int(output.shape[1]) == 1
+
+        variable = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'value')
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+
+            before = sess.run(variable)
+            for var in before:
+                assert_variable_range(var, -0.1, 0.1)
+
+            sess.run(optimize_expr)
+
+            after = sess.run(variable)
+            assert_variable_mismatch(before, after)
+
 
 class PPOFunctionTest(tf.test.TestCase):
     def test_ppo_function(self):
