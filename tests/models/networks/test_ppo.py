@@ -318,15 +318,15 @@ class PPONetworkTest(tf.test.TestCase):
 
     def test_infer_arguments(self):
         args = self.network._infer_arguments()
-        for key in ['obs_t']:
-            assert key in args
+        keys = ['obs_t']
+        for key in args:
+            assert key in keys
 
     def test_update_arguments(self):
         args = self.network._update_arguments()
-        keys = ['obs_t', 'actions_t', 'log_probs_t', 'returns_t',
-                'advantages_t', 'values_t']
-        for key in keys:
-            assert key in args
+        keys = ['obs_t', 'actions_t', 'log_probs_t', 'returns_t', 'advantages_t', 'values_t']
+        for key in args:
+            assert key in keys
 
     # note: to test infer and update, use 'infer' and 'update' instead of
     # '_infer' and '_update'
