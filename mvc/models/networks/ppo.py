@@ -24,12 +24,17 @@ def ppo_function(fcs, num_actions, scope):
     return func
 
 
-def build_value_loss(values, returns, value_factor):
+def build_value_loss(values, returns, old_values, epsilon, value_factor):
     assert len(values.shape) == 2 and values.shape[1] == 1
     assert len(returns.shape) == 2 and returns.shape[1] == 1
+    assert len(old_values.shape) == 2 and old_values.shape[1] == 1
 
     with tf.variable_scope('value_loss'):
-        loss = tf.reduce_mean((returns - values) ** 2)
+        clipped_diff = tf.clip_by_value(
+            (values - old_values), -epsilon, epsilon)
+        loss_clipped = (old_values + clipped_diff - returns) ** 2
+        loss_non_clipped = (returns - values) ** 2
+        loss = tf.reduce_mean(tf.maximum(loss_clipped, loss_non_clipped))
         return value_factor * loss
 
 
@@ -86,7 +91,8 @@ class PPONetwork(BaseNetwork):
             self.actions_ph: kwargs['actions_t'],
             self.returns_ph: kwargs['returns_t'],
             self.advantages_ph: kwargs['advantages_t'],
-            self.old_log_probs_ph: kwargs['log_probs_t']
+            self.old_log_probs_ph: kwargs['log_probs_t'],
+            self.old_values_ph: kwargs['values_t']
         }
         sess = tf.get_default_session()
         opts = [self.loss, self.optimize_expr]
@@ -103,7 +109,6 @@ class PPONetwork(BaseNetwork):
                grad_clip,
                value_factor,
                entropy_factor):
-
         with tf.variable_scope('ppo', reuse=tf.AUTO_REUSE):
             # placeholers
             step_obs_ph = self.step_obs_ph = tf.placeholder(
@@ -118,6 +123,8 @@ class PPONetwork(BaseNetwork):
                 tf.float32, [batch_size, num_actions], name='action')
             old_log_probs_ph = self.old_log_probs_ph = tf.placeholder(
                 tf.float32, [batch_size, num_actions], name='old_log_prob')
+            old_values_ph = self.old_values_ph = tf.placeholder(
+                tf.float32, [batch_size], 'old_values')
 
             # network outputs for inference
             step_dist, step_values = function(step_obs_ph)
@@ -127,10 +134,12 @@ class PPONetwork(BaseNetwork):
             # prepare for loss calculation
             advantages = tf.reshape(advantages_ph, [-1, 1])
             returns = tf.reshape(returns_ph, [-1, 1])
+            old_values = tf.reshape(old_values_ph, [-1, 1])
             log_probs = train_dist.log_prob(actions_ph)
 
             # individual loss
-            value_loss = build_value_loss(train_values, returns, value_factor)
+            value_loss = build_value_loss(train_values, returns, old_values,
+                                          epsilon, value_factor)
             entropy_loss = build_entropy_loss(train_dist, entropy_factor)
             policy_loss = build_policy_loss(log_probs, old_log_probs_ph,
                                             advantages, epsilon)
@@ -159,5 +168,6 @@ class PPONetwork(BaseNetwork):
 
     def _update_arguments(self):
         return [
-            'obs_t', 'actions_t', 'log_probs_t', 'returns_t', 'advantages_t'
+            'obs_t', 'actions_t', 'log_probs_t', 'returns_t',
+            'advantages_t', 'values_t'
         ]

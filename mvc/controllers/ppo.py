@@ -102,6 +102,7 @@ class PPOController(BaseController):
         flat_log_probs_t = np.reshape(traj['log_probs_t'], (data_size, -1))
         flat_returns_t = np.reshape(traj['returns_t'], (-1,))
         flat_advantages_t = np.reshape(traj['advantages_t'], (-1,))
+        flat_values_t = np.reshape(traj['values_t'], (-1,))
 
         # create batch data
         indices = np.random.permutation(np.arange(data_size))
@@ -113,7 +114,8 @@ class PPOController(BaseController):
                 'actions_t': flat_actions_t[index],
                 'log_probs_t': flat_log_probs_t[index],
                 'returns_t': flat_returns_t[index],
-                'advantages_t': flat_advantages_t[index]
+                'advantages_t': flat_advantages_t[index],
+                'values_t': flat_values_t[index]
             }
             batches.append(batch)
 

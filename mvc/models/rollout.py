@@ -63,7 +63,8 @@ class Rollout:
             'actions_t': actions_t,
             'log_probs_t': log_probs_t,
             'returns_t': returns_t,
-            'advantages_t': advs_t
+            'advantages_t': advs_t,
+            'values_t': values_t
         }
 
     def size(self):

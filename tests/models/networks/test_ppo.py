@@ -69,38 +69,88 @@ class PPOFunctionTest(tf.test.TestCase):
 
 
 class BuildValueLossTest(tf.test.TestCase):
-    def test_success(self):
-        nd_values = np.random.random((4, 1))
+    def test_success_with_unclipped(self):
+        epsilon = np.random.random()
         nd_returns = np.random.random((4, 1))
+        nd_old_values = np.random.random((4, 1))
+        nd_values = nd_old_values + epsilon * 0.9
         values = tf.constant(nd_values)
         returns = tf.constant(nd_returns)
+        old_values = tf.constant(nd_old_values)
 
-        loss = build_value_loss(values, returns, 0.5)
+        loss = build_value_loss(values, returns, old_values, epsilon, 0.5)
+        assert len(loss.shape) == 0
 
         with self.test_session() as sess:
             answer = 0.5 * np.mean((nd_returns - nd_values) ** 2)
             assert np.allclose(sess.run(loss), answer)
 
+    def test_success_with_positive_clipped(self):
+        epsilon = np.random.random()
+        nd_old_values = np.random.random((4, 1))
+        nd_values = nd_old_values + epsilon * 1.1
+        nd_returns = np.random.random((4, 1)) + nd_values
+        values = tf.constant(nd_values)
+        returns = tf.constant(nd_returns)
+        old_values = tf.constant(nd_old_values)
+
+        loss = build_value_loss(values, returns, old_values, epsilon, 0.5)
+
+        with self.test_session() as sess:
+            answer = 0.5 * np.mean((nd_returns - (nd_old_values + epsilon)) ** 2)
+            assert np.allclose(sess.run(loss), answer)
+
+    def test_success_with_negative_clipped(self):
+        epsilon = np.random.random()
+        nd_old_values = np.random.random((4, 1))
+        nd_values = nd_old_values - epsilon * 1.1
+        nd_returns = -np.random.random((4, 1))
+        values = tf.constant(nd_values)
+        returns = tf.constant(nd_returns)
+        old_values = tf.constant(nd_old_values)
+
+        loss = build_value_loss(values, returns, old_values, epsilon, 0.5)
+
+        with self.test_session() as sess:
+            answer = 0.5 * np.mean((nd_returns - (nd_old_values - epsilon)) ** 2)
+            assert np.allclose(sess.run(loss), answer)
+
     def test_with_invalid_shape(self):
         values = tf.constant(np.random.random((4)))
+        old_values = tf.constant(np.random.random((4, 1)))
         returns = tf.constant(np.random.random((4, 1)))
         with pytest.raises(AssertionError):
-            build_value_loss(values, returns, 0.5)
+            build_value_loss(values, returns, old_values, 0.5, 0.2)
 
         values = tf.constant(np.random.random((4, 1)))
+        old_values = tf.constant(np.random.random((4, 1)))
         returns = tf.constant(np.random.random((4)))
         with pytest.raises(AssertionError):
-            build_value_loss(values, returns, 0.5)
-
-        values = tf.constant(np.random.random((4, 2)))
-        returns = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, 0.5)
+            build_value_loss(values, returns, old_values, 0.5, 0.2)
 
         values = tf.constant(np.random.random((4, 1)))
+        old_values = tf.constant(np.random.random((4)))
+        returns = tf.constant(np.random.random((4, 1)))
+        with pytest.raises(AssertionError):
+            build_value_loss(values, returns, old_values, 0.5, 0.2)
+
+        values = tf.constant(np.random.random((4, 2)))
+        old_values = tf.constant(np.random.random((4, 1)))
+        returns = tf.constant(np.random.random((4, 1)))
+        with pytest.raises(AssertionError):
+            build_value_loss(values, returns, old_values, 0.5, 0.2)
+
+        values = tf.constant(np.random.random((4, 1)))
+        old_values = tf.constant(np.random.random((4, 1)))
         returns = tf.constant(np.random.random((4, 2)))
         with pytest.raises(AssertionError):
-            build_value_loss(values, returns, 0.5)
+            build_value_loss(values, returns, old_values, 0.5, 0.2)
+
+        values = tf.constant(np.random.random((4, 1)))
+        old_values = tf.constant(np.random.random((4, 2)))
+        returns = tf.constant(np.random.random((4, 1)))
+        with pytest.raises(AssertionError):
+            build_value_loss(values, returns, old_values, 0.5, 0.2)
 
 class BuildEntropyLossTest(tf.test.TestCase):
     def test_sccess(self):
@@ -273,7 +323,9 @@ class PPONetworkTest(tf.test.TestCase):
 
     def test_update_arguments(self):
         args = self.network._update_arguments()
-        for key in ['obs_t', 'actions_t', 'log_probs_t', 'returns_t', 'advantages_t']:
+        keys = ['obs_t', 'actions_t', 'log_probs_t', 'returns_t',
+                'advantages_t', 'values_t']
+        for key in keys:
             assert key in args
 
     # note: to test infer and update, use 'infer' and 'update' instead of
@@ -295,6 +347,7 @@ class PPONetworkTest(tf.test.TestCase):
         returns = np.random.random((self.batch_size,))
         advantages = np.random.random((self.batch_size,))
         old_log_probs = np.random.random((self.batch_size, self.num_actions))
+        old_values = np.random.random((self.batch_size))
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'ppo')
 
         with self.test_session() as sess:
@@ -304,7 +357,8 @@ class PPONetworkTest(tf.test.TestCase):
 
             loss = self.network.update(obs_t=obs, actions_t=actions,
                                        returns_t=returns, advantages_t=advantages,
-                                       log_probs_t=old_log_probs)
+                                       log_probs_t=old_log_probs,
+                                       values_t=old_values)
 
             after = sess.run(variables)
 
