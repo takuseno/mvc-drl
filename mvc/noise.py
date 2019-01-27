@@ -14,7 +14,7 @@ class OrnsteinUhlenbeckActionNoise:
 
     def __call__(self):
         normal = np.random.normal(size=self.mean.shape)
-        new_x = self.prev_x + self.theta * (self.mu - self.prev_x) \
+        new_x = self.prev_x + self.theta * (self.mean - self.prev_x) \
             * self.time + self.sigma * np.sqrt(self.time) * normal
         self.prev_x = new_x
         return new_x
