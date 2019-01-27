@@ -55,7 +55,7 @@ class DDPGNetwork(BaseNetwork):
 
     def _infer(self, **kwargs):
         feed_dict = {
-            self.obs_t_ph: kwargs['obs_t']
+            self.obs_t_ph: np.array([kwargs['obs_t']])
         }
         sess = tf.get_default_session()
         ops = [self.action, self.value]

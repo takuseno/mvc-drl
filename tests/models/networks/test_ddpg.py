@@ -107,7 +107,7 @@ class DDPGNetworkTest(tf.test.TestCase):
     def test_infer(self):
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            obs = np.random.random((1,) + self.state_shape)
+            obs = np.random.random(self.state_shape)
             output = self.network.infer(obs_t=obs)
 
         assert output.action.shape == (self.num_actions,)

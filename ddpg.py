@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import argparse
 import gym
 
@@ -9,6 +10,7 @@ from mvc.controllers.eval import EvalController
 from mvc.models.networks.ddpg import DDPGNetwork
 from mvc.models.metrics import Metrics
 from mvc.models.buffer import Buffer
+from mvc.noise import OrnsteinUhlenbeckActionNoise
 from mvc.view import View
 from mvc.interaction import interact
 
@@ -31,8 +33,12 @@ def main(args):
     saver = tf.train.Saver()
     metrics = Metrics(args.name, args.log_adapter, saver)
 
+    # exploration noise
+    noise = OrnsteinUhlenbeckActionNoise(
+        np.zeros(num_actions), np.ones(num_actions) * 0.2)
+
     # controller
-    controller = DDPGController(network, buffer, metrics, num_actions,
+    controller = DDPGController(network, buffer, metrics, noise, num_actions,
                                 args.batch_size, args.final_steps,
                                 args.log_interval, args.save_interval,
                                 args.eval_interval)
