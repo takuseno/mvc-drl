@@ -17,7 +17,7 @@ from mvc.interaction import interact
 
 def main(args):
     # environment
-    env = MuJoCoWrapper(gym.make(args.env), args.render)
+    env = MuJoCoWrapper(gym.make(args.env), args.reward_scale, args.render)
     eval_env = MuJoCoWrapper(gym.make(args.env))
     num_actions = env.action_space.shape[0]
 
@@ -68,6 +68,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='Pendulum-v0',
                         help='training environment')
+    parser.add_argument('--reward-scale', type=float, default=1.0,
+                        help='reward scaling')
     parser.add_argument('--layers', type=int, nargs='+', default=[64, 64],
                         help='layer units')
     parser.add_argument('--concat-index', type=int, default=1,

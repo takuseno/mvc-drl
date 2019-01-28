@@ -13,13 +13,15 @@ from mvc.view import View
 from mvc.interaction import batch_interact
 
 
-def make_envs(env_name, num_envs):
-    return [MuJoCoWrapper(gym.make(env_name)) for _ in range(num_envs)]
+def make_envs(env_name, num_envs, reward_scale):
+    return [MuJoCoWrapper(gym.make(env_name), reward_scale)\
+        for _ in range(num_envs)]
 
 def main(args):
     env = BatchEnvWrapper(
-        make_envs(args.env, args.num_envs), render=args.render)
-    eval_env = BatchEnvWrapper(make_envs(args.env, args.num_envs))
+        make_envs(args.env, args.num_envs, args.reward_scale), args.render)
+    eval_env = BatchEnvWrapper(
+        make_envs(args.env, args.num_envs, args.reward_scale))
 
     num_actions = env.action_space.shape[0]
 
@@ -89,6 +91,8 @@ if __name__ == '__main__':
                         help='entropy loss weight')
     parser.add_argument('--env', type=str, default='Pendulum-v0',
                         help='training environment')
+    parser.add_argument('--reward-scale', type=float, default=1.0,
+                        help='reward scaling')
     parser.add_argument('--name', type=str, default='experiment',
                         help='experiment name')
     parser.add_argument('--log-adapter', type=str,
