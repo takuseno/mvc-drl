@@ -50,10 +50,11 @@ class StochasticPolicyFunctionTest(tf.test.TestCase):
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
+        b_init = tf.random_uniform_initializer(-0.1, 0.1)
 
         dist = stochastic_policy_function(
             fcs, inpt, num_actions, share=False,
-            w_init=w_init, last_w_init=w_init)
+            w_init=w_init, last_w_init=w_init, last_b_init=b_init)
 
         # to check connection
         optimizer = tf.train.AdamOptimizer(1e-4)
@@ -97,10 +98,11 @@ class StochasticPolicyFunctionTest(tf.test.TestCase):
         fcs = make_fcs()
         num_actions = np.random.randint(10) + 1
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
+        b_init = tf.random_uniform_initializer(-0.1, 0.1)
 
         dist = stochastic_policy_function(
             fcs, inpt, num_actions, share=True,
-            w_init=w_init, last_w_init=w_init)
+            w_init=w_init, last_w_init=w_init, last_b_init=b_init)
 
         assert int(dist.sample(1)[0].shape[0]) == int(inpt.shape[0])
         assert int(dist.sample(1)[0].shape[1]) == num_actions 
@@ -159,9 +161,10 @@ class ValueFunctionTest(tf.test.TestCase):
         inpt = make_tf_inpt()
         fcs = make_fcs()
         w_init = tf.random_uniform_initializer(-0.1, 0.1)
+        b_init = tf.random_uniform_initializer(-0.1, 0.1)
 
         value = value_function(
-            fcs, inpt, w_init=w_init, last_w_init=w_init)
+            fcs, inpt, w_init=w_init, last_w_init=w_init, last_b_init=b_init)
 
         # to check connection
         optimizer = tf.train.AdamOptimizer(1e-4)

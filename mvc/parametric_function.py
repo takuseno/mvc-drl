@@ -21,15 +21,19 @@ def stochastic_policy_function(fcs,
                                share=False,
                                w_init=None,
                                last_w_init=None,
+                               last_b_init=None,
                                scope='policy'):
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         out = _make_fcs(fcs, inpt, activation, w_init)
         mean = tf.layers.dense(out, num_actions, activation=None,
-                               kernel_initializer=last_w_init, name='mean')
+                               kernel_initializer=last_w_init,
+                               bias_initializer=last_b_init,
+                               name='mean')
 
         if share:
             logstd = tf.layers.dense(out, num_actions, activation=None,
                                      kernel_initializer=last_w_init,
+                                     bias_initializer=last_b_init,
                                      name='logstd')
             std = tf.exp(logstd)
         else:
@@ -66,11 +70,13 @@ def value_function(fcs,
                    activation=tf.nn.tanh,
                    w_init=None,
                    last_w_init=None,
+                   last_b_init=None,
                    scope='value'):
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         out = _make_fcs(fcs, inpt, activation, w_init)
         value = tf.layers.dense(out, 1, activation=None,
                                 kernel_initializer=last_w_init,
+                                bias_initializer=last_b_init,
                                 name='output')
     return value
 
