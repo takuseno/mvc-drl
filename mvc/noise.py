@@ -24,3 +24,12 @@ class OrnsteinUhlenbeckActionNoise:
             self.prev_x = self.init_x
         else:
             self.prev_x = np.zeros_like(self.mean)
+
+
+# for evaluation and stochastic policy
+class EmptyNoise:
+    def __call__(self):
+        return 0.0
+
+    def reset(self):
+        pass
