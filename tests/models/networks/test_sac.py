@@ -15,7 +15,7 @@ class BuildVLossTest(tf.test.TestCase):
         nd_v_t = np.random.random((4, 1))
         nd_q1_t = np.random.random((4, 1))
         nd_q2_t = np.random.random((4, 1))
-        nd_log_prob_t = np.random.random((4, 5))
+        nd_log_prob_t = np.random.random((4, 1))
         v_t = tf.constant(nd_v_t, dtype=tf.float32)
         q1_t = tf.constant(nd_q1_t, dtype=tf.float32)
         q2_t = tf.constant(nd_q2_t, dtype=tf.float32)
@@ -53,7 +53,7 @@ class BuildPiLossTest(tf.test.TestCase):
     def test_success(self):
         nd_q1_t = np.random.random((4, 1))
         nd_q2_t = np.random.random((4, 1))
-        nd_log_prob_t = np.random.random((4, 5))
+        nd_log_prob_t = np.random.random((4, 1))
         q1_t = tf.constant(nd_q1_t, dtype=tf.float32)
         q2_t = tf.constant(nd_q2_t, dtype=tf.float32)
         log_prob_t = tf.constant(nd_log_prob_t, dtype=tf.float32)
@@ -126,7 +126,7 @@ class SACNetworkTest(tf.test.TestCase):
             output = self.network.infer(obs_t=obs)
 
         assert output.action.shape == (self.num_actions,)
-        assert output.log_prob.shape == (self.num_actions,)
+        assert len(output.log_prob.shape) == 0
         assert len(output.value.shape) == 0
 
     def test_update(self):

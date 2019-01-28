@@ -45,14 +45,12 @@ def build_entropy_loss(dist, entropy_factor):
 
 
 def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
-    assert len(log_probs.shape) == 2
-    assert len(old_log_probs.shape) == 2
-    assert old_log_probs.shape[1] == log_probs.shape[1]
+    assert len(log_probs.shape) == 2 and log_probs.shape[1] == 1
+    assert len(old_log_probs.shape) == 2 and old_log_probs.shape[1] == 1
     assert len(advantages.shape) == 2 and advantages.shape[1] == 1
 
     with tf.variable_scope('policy_loss'):
         ratio = tf.exp(log_probs - old_log_probs)
-        ratio = tf.reduce_mean(ratio, axis=1, keepdims=True)
         surr1 = ratio * advantages
         surr2 = tf.clip_by_value(
             ratio, 1.0 - epsilon, 1.0 + epsilon) * advantages
@@ -122,7 +120,7 @@ class PPONetwork(BaseNetwork):
             actions_ph = self.actions_ph = tf.placeholder(
                 tf.float32, [batch_size, num_actions], name='action')
             old_log_probs_ph = self.old_log_probs_ph = tf.placeholder(
-                tf.float32, [batch_size, num_actions], name='old_log_prob')
+                tf.float32, [batch_size], name='old_log_prob')
             old_values_ph = self.old_values_ph = tf.placeholder(
                 tf.float32, [batch_size], 'old_values')
 
@@ -135,13 +133,14 @@ class PPONetwork(BaseNetwork):
             advantages = tf.reshape(advantages_ph, [-1, 1])
             returns = tf.reshape(returns_ph, [-1, 1])
             old_values = tf.reshape(old_values_ph, [-1, 1])
-            log_probs = train_dist.log_prob(actions_ph)
+            old_log_probs = tf.reshape(old_log_probs_ph, [-1, 1])
+            log_probs = tf.reshape(train_dist.log_prob(actions_ph), [-1, 1])
 
             # individual loss
             value_loss = build_value_loss(train_values, returns, old_values,
                                           epsilon, value_factor)
             entropy_loss = build_entropy_loss(train_dist, entropy_factor)
-            policy_loss = build_policy_loss(log_probs, old_log_probs_ph,
+            policy_loss = build_policy_loss(log_probs, old_log_probs,
                                             advantages, epsilon)
             # final loss
             self.loss = value_loss + policy_loss + entropy_loss
@@ -160,7 +159,7 @@ class PPONetwork(BaseNetwork):
 
             # action
             self.action = step_dist.sample(1)[0]
-            self.log_policy = step_dist.log_prob(self.action)
+            self.log_policy = tf.reshape(step_dist.log_prob(self.action), [-1])
             self.value = tf.reshape(step_values, [-1])
 
     def _infer_arguments(self):

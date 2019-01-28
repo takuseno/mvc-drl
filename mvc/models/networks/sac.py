@@ -5,7 +5,6 @@ from mvc.action_output import ActionOutput
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import q_function, value_function
-from mvc.models.networks.ddpg import initializer
 from mvc.models.networks.ddpg import build_target_update
 from mvc.models.networks.ddpg import build_optimization
 
@@ -14,7 +13,7 @@ def build_v_loss(v_t, q1_t, q2_t, log_prob_t):
     assert len(v_t.shape) == 2 and v_t.shape[1] == 1
     assert len(q1_t.shape) == 2 and q1_t.shape[1] == 1
     assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
-    assert len(log_prob_t.shape) == 2
+    assert len(log_prob_t.shape) == 2 and log_prob_t.shape[1] == 1
 
     q_t = tf.minimum(q1_t, q2_t)
     target = tf.stop_gradient(q_t - log_prob_t)
@@ -34,7 +33,7 @@ def build_q_loss(q_t, rewards_tp1, v_tp1, dones_tp1, gamma):
 
 
 def build_pi_loss(log_prob_t, q1_t, q2_t):
-    assert len(log_prob_t.shape) == 2
+    assert len(log_prob_t.shape) == 2 and log_prob_t.shape[1] == 1
     assert len(q1_t.shape) == 2 and q1_t.shape[1] == 1
     assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
 
@@ -134,41 +133,42 @@ class SACNetwork(BaseNetwork):
                 tf.float32, (None,), name='dones_tp1')
 
             # initialzier
+            w_init = tf.contrib.layers.xavier_initializer()
             last_w_init = tf.contrib.layers.xavier_initializer()
-            last_b_init = tf.constant_initializer(0.0)
+            last_b_init = tf.contrib.layers.xavier_initializer()
 
             # policy function
             pi_t = stochastic_policy_function(fcs, obs_t_ph, num_actions,
                                               tf.nn.relu, share=True,
-                                              w_init=initializer,
+                                              w_init=w_init,
                                               last_w_init=last_w_init,
                                               last_b_init=last_b_init,
                                               scope='pi')
             sampled_action_t = tf.stop_gradient(pi_t.sample(1)[0])
-            log_prob_t = pi_t.log_prob(sampled_action_t)
+            log_prob_t = tf.reshape(pi_t.log_prob(sampled_action_t), [-1, 1])
             squashed_action_t = tf.nn.tanh(sampled_action_t)
 
             # value function
             v_t = value_function(
-                fcs, obs_t_ph, tf.nn.relu, initializer,
+                fcs, obs_t_ph, tf.nn.relu, w_init,
                 last_w_init, last_b_init, scope='v')
             # target value function
             v_tp1 = value_function(
-                fcs, obs_tp1_ph, tf.nn.relu, initializer,
+                fcs, obs_tp1_ph, tf.nn.relu, w_init,
                 last_w_init, last_b_init, scope='target_v')
 
             # two q functions
             q1_t_with_pi = q_function(fcs, obs_t_ph, squashed_action_t,
-                                      concat_index, tf.nn.relu, initializer,
+                                      concat_index, tf.nn.relu, w_init,
                                       last_w_init, last_b_init, scope='q1')
             q1_t = q_function(fcs, obs_t_ph, actions_t_ph, concat_index,
-                              tf.nn.relu, initializer, last_w_init,
+                              tf.nn.relu, w_init, last_w_init,
                               last_b_init, scope='q1')
             q2_t_with_pi = q_function(fcs, obs_t_ph, squashed_action_t,
-                                      concat_index, tf.nn.relu, initializer,
+                                      concat_index, tf.nn.relu, w_init,
                                       last_w_init, last_b_init, scope='q2')
             q2_t = q_function(fcs, obs_t_ph, actions_t_ph, concat_index,
-                              tf.nn.relu, initializer, last_w_init,
+                              tf.nn.relu, w_init, last_w_init,
                               last_b_init, scope='q2')
 
             # prepare for loss
@@ -207,7 +207,7 @@ class SACNetwork(BaseNetwork):
             # for inference
             self.action = squashed_action_t[0]
             self.value = tf.reshape(v_t, [-1])[0]
-            self.log_prob = log_prob_t[0]
+            self.log_prob = tf.reshape(log_prob_t, [-1])[0]
 
     def _infer_arguments(self):
         return ['obs_t']

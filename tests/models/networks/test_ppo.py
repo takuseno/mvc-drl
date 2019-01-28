@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.contrib.distributions as tfd
 import numpy as np
 import pytest
 
@@ -18,7 +19,7 @@ def function(num_actions):
             out = tf.layers.dense(obs, 64)
             loc = tf.layers.dense(out, num_actions)
             scale = tf.layers.dense(out, num_actions)
-            dist = tf.distributions.Normal(loc=loc, scale=scale)
+            dist = tfd.MultivariateNormalDiag(loc=loc, scale_diag=scale)
 
             out = tf.layers.dense(obs, 64)
             value = tf.layers.dense(out, 1)
@@ -170,8 +171,8 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
     def test_success_with_positive_not_clipped(self):
         # new/old < 0.5
-        nd_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.2)
-        nd_old_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.5 + 0.5)
+        nd_log_probs = np.log(np.random.random((4, 1)) * 0.2)
+        nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.5 + 0.5)
         nd_advantages = np.random.random((4, 1))
 
         log_probs = tf.constant(nd_log_probs)
@@ -180,8 +181,7 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
-        ratio = np.expand_dims(
-            np.mean(np.exp(nd_log_probs - nd_old_log_probs), axis=1), axis=1)
+        ratio = np.exp(nd_log_probs - nd_old_log_probs)
         answer = -np.mean(ratio * nd_advantages)
 
         with self.test_session() as sess:
@@ -189,8 +189,8 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
     def test_success_with_positive_clipped(self):
         # new/old > 2.0
-        nd_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.5 + 0.5)
-        nd_old_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.2)
+        nd_log_probs = np.log(np.random.random((4, 1)) * 0.5 + 0.5)
+        nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.2)
         nd_advantages = np.random.random((4, 1))
 
         log_probs = tf.constant(nd_log_probs)
@@ -199,8 +199,7 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
-        ratio = np.expand_dims(
-            np.mean(np.exp(nd_log_probs - nd_old_log_probs), axis=1), axis=1)
+        ratio = np.exp(nd_log_probs - nd_old_log_probs)
         ratio[ratio > 1.2] = 1.2
         answer = -np.mean(ratio * nd_advantages)
 
@@ -209,8 +208,8 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
     def test_success_with_positive_clipped(self):
         # new/old > 2.0
-        nd_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.5 + 0.5)
-        nd_old_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.2)
+        nd_log_probs = np.log(np.random.random((4, 1)) * 0.5 + 0.5)
+        nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.2)
         nd_advantages = -np.random.random((4, 1))
 
         log_probs = tf.constant(nd_log_probs)
@@ -219,8 +218,7 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
-        ratio = np.expand_dims(
-            np.mean(np.exp(nd_log_probs - nd_old_log_probs), axis=1), axis=1)
+        ratio = np.exp(nd_log_probs - nd_old_log_probs)
         answer = -np.mean(ratio * nd_advantages)
 
         with self.test_session() as sess:
@@ -228,8 +226,8 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
     def test_success_with_negative_clipped(self):
         # new/old < 0.5
-        nd_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.2)
-        nd_old_log_probs = np.log(np.random.random((4, self.num_actions)) * 0.5 + 0.5)
+        nd_log_probs = np.log(np.random.random((4, 1)) * 0.2)
+        nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.5 + 0.5)
         nd_advantages = -np.random.random((4, 1))
 
         log_probs = tf.constant(nd_log_probs)
@@ -238,8 +236,7 @@ class BuildPolicyLossTest(tf.test.TestCase):
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
-        ratio = np.expand_dims(
-            np.mean(np.exp(nd_log_probs - nd_old_log_probs), axis=1), axis=1)
+        ratio = np.exp(nd_log_probs - nd_old_log_probs)
         ratio[ratio < 0.8] = 0.8
         answer = -np.mean(ratio * nd_advantages)
 
@@ -250,37 +247,37 @@ class BuildPolicyLossTest(tf.test.TestCase):
         epsilon = np.random.random()
 
         log_probs = tf.constant(np.random.random((4)))
-        old_log_probs = tf.constant(np.random.random((4, self.num_actions)))
+        old_log_probs = tf.constant(np.random.random((4, 1)))
         advantages = tf.constant(np.random.random((4, 1)))
         with pytest.raises(AssertionError):
             build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
 
-        log_probs = tf.constant(np.random.random((4, self.num_actions)))
+        log_probs = tf.constant(np.random.random((4, 1)))
         old_log_probs = tf.constant(np.random.random((4)))
         advantages = tf.constant(np.random.random((4, 1)))
         with pytest.raises(AssertionError):
             build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
 
-        log_probs = tf.constant(np.random.random((4, self.num_actions)))
-        old_log_probs = tf.constant(np.random.random((4, self.num_actions)))
+        log_probs = tf.constant(np.random.random((4, 1)))
+        old_log_probs = tf.constant(np.random.random((4, 1)))
         advantages = tf.constant(np.random.random((4)))
         with pytest.raises(AssertionError):
             build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
 
-        log_probs = tf.constant(np.random.random((4, self.num_actions + 1)))
-        old_log_probs = tf.constant(np.random.random((4, self.num_actions)))
+        log_probs = tf.constant(np.random.random((4, 2)))
+        old_log_probs = tf.constant(np.random.random((4, 1)))
         advantages = tf.constant(np.random.random((4, 1)))
         with pytest.raises(AssertionError):
             build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
 
-        log_probs = tf.constant(np.random.random((4, self.num_actions)))
-        old_log_probs = tf.constant(np.random.random((4, self.num_actions + 1)))
+        log_probs = tf.constant(np.random.random((4, 1)))
+        old_log_probs = tf.constant(np.random.random((4, 2)))
         advantages = tf.constant(np.random.random((4, 1)))
         with pytest.raises(AssertionError):
             build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
 
-        log_probs = tf.constant(np.random.random((4, self.num_actions)))
-        old_log_probs = tf.constant(np.random.random((4, self.num_actions)))
+        log_probs = tf.constant(np.random.random((4, 1)))
+        old_log_probs = tf.constant(np.random.random((4, 1)))
         advantages = tf.constant(np.random.random((4, 2)))
         with pytest.raises(AssertionError):
             build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
@@ -307,9 +304,8 @@ class PPONetworkTest(tf.test.TestCase):
         assert int(self.network.action.shape[0]) == self.num_envs
         assert int(self.network.action.shape[1]) == self.num_actions
 
-        assert len(self.network.log_policy.shape) == 2
+        assert len(self.network.log_policy.shape) == 1
         assert int(self.network.log_policy.shape[0]) == self.num_envs
-        assert int(self.network.log_policy.shape[1]) == self.num_actions
 
         assert len(self.network.value.shape) == 1
         assert int(self.network.value.shape[0]) == self.num_envs
@@ -337,7 +333,7 @@ class PPONetworkTest(tf.test.TestCase):
             output = self.network.infer(obs_t=obs)
 
         assert output.action.shape == (self.num_envs, self.num_actions)
-        assert output.log_prob.shape == (self.num_envs, self.num_actions)
+        assert output.log_prob.shape == (self.num_envs,)
         assert output.value.shape == (self.num_envs,)
 
     def test_update(self):
@@ -346,7 +342,7 @@ class PPONetworkTest(tf.test.TestCase):
         returns = np.random.random((self.batch_size,))
         returns = np.random.random((self.batch_size,))
         advantages = np.random.random((self.batch_size,))
-        old_log_probs = np.random.random((self.batch_size, self.num_actions))
+        old_log_probs = np.random.random((self.batch_size))
         old_values = np.random.random((self.batch_size))
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'ppo')
 
