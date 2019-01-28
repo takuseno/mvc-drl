@@ -7,6 +7,7 @@ from mvc.models.networks.sac import SACNetwork
 from mvc.models.networks.sac import build_v_loss
 from mvc.models.networks.sac import build_q_loss
 from mvc.models.networks.sac import build_pi_loss
+from mvc.models.networks.sac import build_weight_decay
 
 
 class BuildVLossTest(tf.test.TestCase):
@@ -65,6 +66,23 @@ class BuildPiLossTest(tf.test.TestCase):
             mean_log_prob = np.mean(nd_log_prob_t, axis=1)
             answer = np.mean(mean_log_prob - q_t)
             assert np.allclose(sess.run(loss), answer)
+
+
+class BuildWeightDecayTest(tf.test.TestCase):
+    def test_success(self):
+        tf.reset_default_graph()
+        nd_weight = np.random.random((4, 4))
+        nd_bias = np.random.random((1, 4))
+        weight = tf.Variable(nd_weight, name='var/weight')
+        bias = tf.Variable(nd_bias, name='var/bias')
+        scale = np.random.random()
+
+        weight_decay = build_weight_decay(scale, 'var')
+        weight_sum = tf.reduce_sum(weight)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            assert np.allclose(sess.run(weight_decay), scale * sess.run(weight_sum))
 
 
 class SACNetworkTest(tf.test.TestCase):

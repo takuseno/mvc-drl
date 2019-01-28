@@ -44,6 +44,14 @@ def build_pi_loss(log_prob_t, q1_t, q2_t):
     return loss
 
 
+def build_weight_decay(scale, scope):
+    variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
+    weight_sum = 0.0
+    for var in variables:
+        if var.name.find('bias') > -1:
+            continue
+        weight_sum += tf.reduce_sum(var)
+    return scale * weight_sum
 class SACNetwork(BaseNetwork):
     def __init__(self,
                  fcs,
@@ -182,6 +190,8 @@ class SACNetwork(BaseNetwork):
             self.target_update = build_target_update(
                 'sac/v', 'sac/target_v', tau)
 
+            # policy weight decay
+            policy_decay = build_weight_decay(0.001, 'sac/pi')
             # optimization
             self.v_optimize_expr = build_optimization(
                 self.v_loss, v_lr, 'sac/v')
@@ -190,7 +200,7 @@ class SACNetwork(BaseNetwork):
             self.q2_optimize_expr = build_optimization(
                 self.q2_loss, q_lr, 'sac/q2')
             self.pi_optimize_expr = build_optimization(
-                self.pi_loss, pi_lr, 'sac/pi')
+                self.pi_loss + policy_decay, pi_lr, 'sac/pi')
 
             # for inference
             self.action = squashed_action_t[0]
