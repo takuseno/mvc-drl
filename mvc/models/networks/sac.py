@@ -18,7 +18,8 @@ def build_v_loss(v_t, q1_t, q2_t, log_prob_t):
 
     q_t = tf.minimum(q1_t, q2_t)
     mean_log_prob = tf.reduce_mean(log_prob_t, axis=1)
-    loss = 0.5 * tf.reduce_mean((v_t - (q_t - mean_log_prob)) ** 2)
+    target = tf.stop_gradient(q_t - mean_log_prob)
+    loss = 0.5 * tf.reduce_mean((v_t - target) ** 2)
     return loss
 
 
@@ -28,7 +29,7 @@ def build_q_loss(q_t, rewards_tp1, v_tp1, dones_tp1, gamma):
     assert len(v_tp1.shape) == 2 and v_tp1.shape[1] == 1
     assert len(dones_tp1.shape) == 2 and dones_tp1.shape[1] == 1
 
-    target = rewards_tp1 + gamma * v_tp1 * (1.0 - dones_tp1)
+    target = tf.stop_gradient(rewards_tp1 + gamma * v_tp1 * (1.0 - dones_tp1))
     loss = 0.5 * tf.reduce_mean((target - q_t) ** 2)
     return loss
 
@@ -38,7 +39,7 @@ def build_pi_loss(log_prob_t, q1_t, q2_t):
     assert len(q1_t.shape) == 2 and q1_t.shape[1] == 1
     assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
 
-    q_t = tf.minimum(q1_t, q2_t)
+    q_t = tf.stop_gradient(tf.minimum(q1_t, q2_t))
     mean_log_prob = tf.reduce_mean(log_prob_t, axis=1)
     loss = tf.reduce_mean(mean_log_prob - q_t)
     return loss
@@ -52,6 +53,8 @@ def build_weight_decay(scale, scope):
             continue
         weight_sum += tf.reduce_sum(var)
     return scale * weight_sum
+
+
 class SACNetwork(BaseNetwork):
     def __init__(self,
                  fcs,
@@ -143,7 +146,7 @@ class SACNetwork(BaseNetwork):
                                               last_w_init=last_w_init,
                                               last_b_init=last_b_init,
                                               scope='pi')
-            sampled_action_t = pi_t.sample(1)[0]
+            sampled_action_t = tf.stop_gradient(pi_t.sample(1)[0])
             log_prob_t = pi_t.log_prob(sampled_action_t)
             squashed_action_t = tf.nn.tanh(sampled_action_t)
 
@@ -192,6 +195,7 @@ class SACNetwork(BaseNetwork):
 
             # policy weight decay
             policy_decay = build_weight_decay(0.001, 'sac/pi')
+
             # optimization
             self.v_optimize_expr = build_optimization(
                 self.v_loss, v_lr, 'sac/v')
