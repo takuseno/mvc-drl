@@ -87,6 +87,36 @@ class DDPGControllerTest(unittest.TestCase):
         controller = DDPGController(network, buffer, metrics, noise,
                                     num_actions=4, batch_size=32)
 
+    def test_register_metrics(self):
+        network = DummyNetwork()
+        buffer = Buffer()
+        metrics = DummyMetrics()
+        metrics.register = MagicMock()
+        noise = DummyNoise()
+        controller = DDPGController(network, buffer, metrics, noise,
+                                    num_actions=4, batch_size=32)
+
+        assert tuple(metrics.register.call_args_list[0])[0] == ('step', 'single')
+        assert tuple(metrics.register.call_args_list[1])[0] == ('critic_loss', 'queue')
+        assert tuple(metrics.register.call_args_list[2])[0] == ('actor_loss', 'queue')
+        assert tuple(metrics.register.call_args_list[3])[0] == ('reward', 'queue')
+
+    def test_recor_update_metrics(self):
+        network = DummyNetwork()
+        buffer = Buffer()
+        metrics = DummyMetrics()
+        metrics.add = MagicMock()
+        noise = DummyNoise()
+        controller = DDPGController(network, buffer, metrics, noise,
+                                    num_actions=4, batch_size=32)
+
+        critic_loss = np.random.random()
+        actor_loss = np.random.random()
+        controller._record_update_metrics(critic_loss, actor_loss)
+
+        assert tuple(metrics.add.call_args_list[0])[0] == ('critic_loss', critic_loss)
+        assert tuple(metrics.add.call_args_list[1])[0] == ('actor_loss', actor_loss)
+
     def test_step(self):
         network = DummyNetwork()
         buffer = Buffer()
@@ -139,6 +169,7 @@ class DDPGControllerTest(unittest.TestCase):
         metrics.add = MagicMock()
         controller = DDPGController(network, buffer, metrics, noise,
                                     num_actions=4, batch_size=32)
+        controller._record_update_metrics = MagicMock()
 
         for i in range(33):
             inputs = make_inputs()
@@ -146,6 +177,7 @@ class DDPGControllerTest(unittest.TestCase):
         controller.update()
 
         network._update.assert_called_once()
+        controller._record_update_metrics.assert_called_once_with(critic_loss, actor_loss)
 
     def test_log(self):
         network = DummyNetwork()
@@ -162,7 +194,9 @@ class DDPGControllerTest(unittest.TestCase):
 
         metrics.get.assert_called_once_with('step')
         assert metrics.log_metric.call_count == 3
-        assert metrics.log_metric.call_args[0] == ('actor_loss', step)
+        assert tuple(metrics.log_metric.call_args_list[0])[0] == ('reward', step)
+        assert tuple(metrics.log_metric.call_args_list[1])[0] == ('critic_loss', step)
+        assert tuple(metrics.log_metric.call_args_list[2])[0] == ('actor_loss', step)
 
     def stop_episode(self):
         network = DummyNetwork()

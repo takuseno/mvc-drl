@@ -29,13 +29,20 @@ class DDPGController(BaseController):
         self.num_actions = num_actions
         self.batch_size = batch_size
 
+        self._register_metrics()
+
+        super().__init__(metrics, final_steps, log_interval,
+                         save_interval, eval_interval)
+
+    def _register_metrics(self):
         self.metrics.register('step', 'single')
         self.metrics.register('critic_loss', 'queue')
         self.metrics.register('actor_loss', 'queue')
         self.metrics.register('reward', 'queue')
 
-        super().__init__(metrics, final_steps, log_interval,
-                         save_interval, eval_interval)
+    def _record_update_metrics(self, *loss):
+        self.metrics.add('critic_loss', loss[0])
+        self.metrics.add('actor_loss', loss[1])
 
     def step(self, obs, reward, done, info):
         # infer action
@@ -56,13 +63,12 @@ class DDPGController(BaseController):
         batch = self.buffer.fetch(self.batch_size)
 
         # update
-        critic_loss, actor_loss = self.network.update(**batch)
+        loss = self.network.update(**batch)
 
         # record metrics
-        self.metrics.add('critic_loss', critic_loss)
-        self.metrics.add('actor_loss', actor_loss)
+        self._record_update_metrics(*loss)
 
-        return critic_loss, actor_loss
+        return loss
 
     def log(self):
         step = self.metrics.get('step')
