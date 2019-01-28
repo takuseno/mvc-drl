@@ -55,7 +55,7 @@ class DummyMetrics(Metrics):
 
 def make_output():
     action = np.random.random((4, 4))
-    log_prob = np.random.random((4, 4))
+    log_prob = np.random.random((4,))
     value = np.random.random((4,))
     return ActionOutput(action, log_prob, value)
 
@@ -166,7 +166,7 @@ class PPOControllerTest(unittest.TestCase):
                 elif key == 'actions_t':
                     assert batch[key].shape[1] == action.shape[1]
                 elif key == 'log_probs_t':
-                    assert batch[key].shape[1] == action.shape[1]
+                    assert len(batch[key].shape) == 1
                 elif key == 'returns_t':
                     assert len(batch[key].shape) == 1
                 elif key == 'advantages_t':

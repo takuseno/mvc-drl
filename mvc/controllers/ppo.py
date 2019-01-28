@@ -98,7 +98,7 @@ class PPOController(BaseController):
         data = {
             'obs_t': np.reshape(traj['obs_t'], (data_size,) + state_shape),
             'actions_t': np.reshape(traj['actions_t'], (data_size, -1)),
-            'log_probs_t': np.reshape(traj['log_probs_t'], (data_size, -1)),
+            'log_probs_t': np.reshape(traj['log_probs_t'], (-1,)),
             'returns_t': np.reshape(traj['returns_t'], (-1,)),
             'advantages_t': np.reshape(traj['advantages_t'], (-1,)),
             'values_t': np.reshape(traj['values_t'], (-1,))
