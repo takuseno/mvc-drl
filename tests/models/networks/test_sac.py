@@ -25,8 +25,7 @@ class BuildVLossTest(tf.test.TestCase):
 
         with self.test_session() as sess:
             nd_q_t = np.minimum(nd_q1_t, nd_q2_t)
-            mean_log_prob = np.mean(nd_log_prob_t, axis=1)
-            answer = 0.5 * np.mean((nd_v_t - (nd_q_t - mean_log_prob)) ** 2)
+            answer = 0.5 * np.mean((nd_v_t - (nd_q_t - nd_log_prob_t)) ** 2)
             assert np.allclose(sess.run(loss), answer)
 
 
@@ -63,8 +62,7 @@ class BuildPiLossTest(tf.test.TestCase):
 
         with self.test_session() as sess:
             q_t = np.minimum(nd_q1_t, nd_q2_t)
-            mean_log_prob = np.mean(nd_log_prob_t, axis=1)
-            answer = np.mean(mean_log_prob - q_t)
+            answer = np.mean(nd_log_prob_t - q_t)
             assert np.allclose(sess.run(loss), answer)
 
 

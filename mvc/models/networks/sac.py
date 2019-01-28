@@ -17,8 +17,7 @@ def build_v_loss(v_t, q1_t, q2_t, log_prob_t):
     assert len(log_prob_t.shape) == 2
 
     q_t = tf.minimum(q1_t, q2_t)
-    mean_log_prob = tf.reduce_mean(log_prob_t, axis=1)
-    target = tf.stop_gradient(q_t - mean_log_prob)
+    target = tf.stop_gradient(q_t - log_prob_t)
     loss = 0.5 * tf.reduce_mean((v_t - target) ** 2)
     return loss
 
@@ -40,8 +39,7 @@ def build_pi_loss(log_prob_t, q1_t, q2_t):
     assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
 
     q_t = tf.stop_gradient(tf.minimum(q1_t, q2_t))
-    mean_log_prob = tf.reduce_mean(log_prob_t, axis=1)
-    loss = tf.reduce_mean(mean_log_prob - q_t)
+    loss = tf.reduce_mean(log_prob_t - q_t)
     return loss
 
 
