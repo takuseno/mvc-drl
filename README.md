@@ -13,11 +13,11 @@ MVC provides a direction to an architecture with less dependencies, which would 
 
 
 ## algorithms
-First, this repository offers Proximal Policy Optimization (PPO) algorithm because PPO requires advantage computation and a bit complex neural network loss functions, which would be enough difficult for starters to implement.
+For academic usage, we provide baseline implementations that you might need to compare.
 
 - [x] Proximal Policy Optimization
-- [ ] Deep Deterministic Policy Gradients
-- [ ] Soft Actor-Critic
+- [x] Deep Deterministic Policy Gradients
+- [x] Soft Actor-Critic
 
 ## unit testing
 To gurantee code quality, all functions and classes including neural networks must have unit tests.
