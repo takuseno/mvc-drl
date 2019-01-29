@@ -47,11 +47,13 @@ class DDPGController(BaseController):
     def step(self, obs, reward, done, info):
         # infer action
         output = self.network.infer(obs_t=obs)
+        # action with exploration noise
+        action = output.action + self.noise()
         # store trajectory
-        self.buffer.add(obs, output.action, reward, 0.0)
+        self.buffer.add(obs, action, reward, 0.0)
         # record metrics
         self.metrics.add('step', 1)
-        return output.action + self.noise()
+        return action
 
     def should_update(self):
         return self.buffer.size() > self.batch_size
