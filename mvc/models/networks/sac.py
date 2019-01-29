@@ -133,6 +133,7 @@ class SACNetwork(BaseNetwork):
                 tf.float32, (None,), name='dones_tp1')
 
             # initialzier
+            zeros_init = tf.zeros_initializer()
             w_init = tf.contrib.layers.xavier_initializer()
             last_w_init = tf.contrib.layers.xavier_initializer()
             last_b_init = tf.contrib.layers.xavier_initializer()
@@ -151,25 +152,25 @@ class SACNetwork(BaseNetwork):
             # value function
             v_t = value_function(
                 fcs, obs_t_ph, tf.nn.relu, w_init,
-                last_w_init, last_b_init, scope='v')
+                last_w_init, zeros_init, scope='v')
             # target value function
             v_tp1 = value_function(
                 fcs, obs_tp1_ph, tf.nn.relu, w_init,
-                last_w_init, last_b_init, scope='target_v')
+                last_w_init, zeros_init, scope='target_v')
 
             # two q functions
             q1_t_with_pi = q_function(fcs, obs_t_ph, squashed_action_t,
                                       concat_index, tf.nn.relu, w_init,
-                                      last_w_init, last_b_init, scope='q1')
+                                      last_w_init, zeros_init, scope='q1')
             q1_t = q_function(fcs, obs_t_ph, actions_t_ph, concat_index,
                               tf.nn.relu, w_init, last_w_init,
-                              last_b_init, scope='q1')
+                              zeros_init, scope='q1')
             q2_t_with_pi = q_function(fcs, obs_t_ph, squashed_action_t,
                                       concat_index, tf.nn.relu, w_init,
-                                      last_w_init, last_b_init, scope='q2')
+                                      last_w_init, zeros_init, scope='q2')
             q2_t = q_function(fcs, obs_t_ph, actions_t_ph, concat_index,
                               tf.nn.relu, w_init, last_w_init,
-                              last_b_init, scope='q2')
+                              zeros_init, scope='q2')
 
             # prepare for loss
             rewards_tp1 = tf.reshape(rewards_tp1_ph, [-1, 1])
