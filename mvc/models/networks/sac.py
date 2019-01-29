@@ -147,7 +147,11 @@ class SACNetwork(BaseNetwork):
                                               scope='pi')
             sampled_action_t = pi_t.sample(1)[0]
             squashed_action_t = tf.nn.tanh(sampled_action_t)
-            log_prob_t = tf.reshape(pi_t.log_prob(sampled_action_t), [-1, 1])
+            diff = tf.reduce_sum(
+                tf.log(1 - squashed_action_t ** 2 + 1e-6),
+                axis=1, keepdims=True)
+            log_prob_t = tf.reshape(
+                pi_t.log_prob(sampled_action_t), [-1, 1]) - diff
 
             # value function
             v_t = value_function(
