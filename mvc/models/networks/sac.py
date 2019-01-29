@@ -37,7 +37,7 @@ def build_pi_loss(log_prob_t, q1_t, q2_t):
     assert len(q1_t.shape) == 2 and q1_t.shape[1] == 1
     assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
 
-    q_t = tf.stop_gradient(tf.minimum(q1_t, q2_t))
+    q_t = tf.minimum(q1_t, q2_t)
     loss = tf.reduce_mean(log_prob_t - q_t)
     return loss
 
@@ -145,9 +145,9 @@ class SACNetwork(BaseNetwork):
                                               last_w_init=last_w_init,
                                               last_b_init=last_b_init,
                                               scope='pi')
-            sampled_action_t = tf.stop_gradient(pi_t.sample(1)[0])
-            log_prob_t = tf.reshape(pi_t.log_prob(sampled_action_t), [-1, 1])
+            sampled_action_t = pi_t.sample(1)[0]
             squashed_action_t = tf.nn.tanh(sampled_action_t)
+            log_prob_t = tf.reshape(pi_t.log_prob(sampled_action_t), [-1, 1])
 
             # value function
             v_t = value_function(
