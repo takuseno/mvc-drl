@@ -19,6 +19,18 @@ For academic usage, we provide baseline implementations that you might need to c
 - [x] Deep Deterministic Policy Gradients
 - [x] Soft Actor-Critic
 
+## Ant performance
+Each point represents an average evaluation reward of 10 episodes.
+
+### PPO
+![ppo](graphs/ppo_ant.png)
+
+### DDPG
+coming soon
+
+### SAC
+coming soon
+
 ## unit testing
 To gurantee code quality, all functions and classes including neural networks must have unit tests.
 
