@@ -21,7 +21,8 @@ def main(args):
             label = args.label[i]
         plt.plot(np.array(steps), np.array(values), label=label)
 
-    plt.legend()
+    if not args.hide_legend:
+        plt.legend()
 
     if args.save is None:
         plt.show()
@@ -31,6 +32,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--save', type=str, help='file name to save figure')
+    parser.add_argument('--hide-legend', action='store_true')
     parser.add_argument('--label', nargs='*', action='append',
                         help='labels of plots')
     parser.add_argument('path', nargs='+', help='path to csv files')
