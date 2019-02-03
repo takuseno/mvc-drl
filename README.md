@@ -24,7 +24,7 @@ $ ./scripts/up.sh
 root@a84ab59aa668:/home/app#  ls
 Dockerfile  README.md    example.confing.json  graphs            mvc      scripts  tests
 LICENSE     examples     logs                  requirements.txt  test.sh  tools
-root@a84ab59aa668:/home/app#  ls
+root@a84ab59aa668:/home/app#
 ```
 
 ### manual
