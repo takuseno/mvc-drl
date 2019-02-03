@@ -62,9 +62,10 @@ class SACNetwork(BaseNetwork):
                  tau,
                  pi_lr,
                  q_lr,
-                 v_lr):
+                 v_lr,
+                 reg):
         self._build(fcs, concat_index, state_shape, num_actions,
-                    gamma, tau, pi_lr, q_lr, v_lr)
+                    gamma, tau, pi_lr, q_lr, v_lr, reg)
 
     def _infer(self, **kwargs):
         sess = tf.get_default_session()
@@ -119,7 +120,8 @@ class SACNetwork(BaseNetwork):
                tau,
                pi_lr,
                q_lr,
-               v_lr):
+               v_lr,
+               reg):
         with tf.variable_scope('sac'):
             obs_t_ph = self.obs_t_ph = tf.placeholder(
                 tf.float32, (None,) + state_shape, name='obs_t')
@@ -196,14 +198,17 @@ class SACNetwork(BaseNetwork):
             self.target_update = build_target_update(
                 'sac/v', 'sac/target_v', tau)
 
-            # policy weight decay
-            policy_decay = build_weight_decay(0.001, 'sac/pi')
+            # policy reguralization
+            pi_mean_loss = 0.5 * tf.reduce_mean(pi_t.mean() ** 2)
+            pi_logstd_loss = 0.5 * tf.reduce_mean(tf.log(pi_t.stddev()) ** 2)
+            policy_decay = reg * (pi_mean_loss + pi_logstd_loss)
 
             # optimization
             self.v_optimize_expr = build_optim(self.v_loss, v_lr, 'sac/v')
             self.q1_optimize_expr = build_optim(self.q1_loss, q_lr, 'sac/q1')
             self.q2_optimize_expr = build_optim(self.q2_loss, q_lr, 'sac/q2')
-            self.pi_optimize_expr = build_optim(self.pi_loss, pi_lr, 'sac/pi')
+            self.pi_optimize_expr = build_optim(self.pi_loss + policy_decay,
+                                                pi_lr, 'sac/pi')
 
             # for inference
             self.action = squashed_action_t[0]
