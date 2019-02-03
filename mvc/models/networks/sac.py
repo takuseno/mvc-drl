@@ -6,7 +6,7 @@ from mvc.models.networks.base_network import BaseNetwork
 from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import q_function, value_function
 from mvc.models.networks.ddpg import build_target_update
-from mvc.models.networks.ddpg import build_optimization
+from mvc.models.networks.ddpg import build_optim
 
 
 def build_v_loss(v_t, q1_t, q2_t, log_prob_t):
@@ -200,14 +200,10 @@ class SACNetwork(BaseNetwork):
             policy_decay = build_weight_decay(0.001, 'sac/pi')
 
             # optimization
-            self.v_optimize_expr = build_optimization(
-                self.v_loss, v_lr, 'sac/v')
-            self.q1_optimize_expr = build_optimization(
-                self.q1_loss, q_lr, 'sac/q1')
-            self.q2_optimize_expr = build_optimization(
-                self.q2_loss, q_lr, 'sac/q2')
-            self.pi_optimize_expr = build_optimization(
-                self.pi_loss + policy_decay, pi_lr, 'sac/pi')
+            self.v_optimize_expr = build_optim(self.v_loss, v_lr, 'sac/v')
+            self.q1_optimize_expr = build_optim(self.q1_loss, q_lr, 'sac/q1')
+            self.q2_optimize_expr = build_optim(self.q2_loss, q_lr, 'sac/q2')
+            self.pi_optimize_expr = build_optim(self.pi_loss, pi_lr, 'sac/pi')
 
             # for inference
             self.action = squashed_action_t[0]

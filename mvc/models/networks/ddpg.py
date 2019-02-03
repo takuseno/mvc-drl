@@ -33,7 +33,7 @@ def build_target_update(src, dst, tau):
     return tf.group(*ops)
 
 
-def build_optimization(loss, lr, scope):
+def build_optim(loss, lr, scope):
     optimizer = tf.train.AdamOptimizer(lr, epsilon=1e-8)
     variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
     optimize_expr = optimizer.minimize(loss, var_list=variables)
@@ -153,10 +153,10 @@ class DDPGNetwork(BaseNetwork):
                 'ddpg/actor', 'ddpg/target_actor', tau)
 
             # optimization
-            self.critic_optimize_expr = build_optimization(
-                self.critic_loss, critic_lr, 'ddpg/critic')
-            self.actor_optimize_expr = build_optimization(
-                self.actor_loss, actor_lr, 'ddpg/actor')
+            self.critic_optimize_expr = build_optim(self.critic_loss,
+                                                    critic_lr, 'ddpg/critic')
+            self.actor_optimize_expr = build_optim(self.actor_loss,
+                                                   actor_lr, 'ddpg/actor')
 
             # action
             self.action = policy_t

@@ -7,7 +7,7 @@ from tests.test_utils import assert_variable_mismatch, assert_variable_match
 from tests.test_utils import make_fcs
 from mvc.models.networks.ddpg import build_critic_loss
 from mvc.models.networks.ddpg import build_target_update
-from mvc.models.networks.ddpg import build_optimization
+from mvc.models.networks.ddpg import build_optim
 from mvc.models.networks.ddpg import DDPGNetwork
 
 
@@ -59,7 +59,7 @@ class BuildOptimization(tf.test.TestCase):
         var1 = tf.Variable(np.random.random((dim1, dim2)), name='var1')
         var2 = tf.Variable(np.random.random((dim1, dim2)), name='var2')
 
-        ops = build_optimization(var1, 1e-4, 'var1')
+        ops = build_optim(var1, 1e-4, 'var1')
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
