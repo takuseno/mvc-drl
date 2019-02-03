@@ -23,6 +23,10 @@ For academic usage, we provide baseline implementations that you might need to c
 Each point represents an average evaluation reward of 10 episodes.
 
 ### PPO
+```sh
+$ python -m examples.ppo --env Ant-v2
+```
+
 ![ppo](graphs/ppo_ant.png)
 
 ### DDPG
