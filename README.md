@@ -21,6 +21,7 @@ For academic usage, we provide baseline implementations that you might need to c
 
 ## Ant performance
 Each point represents an average evaluation reward of 10 episodes.
+Almost same performance has been achieved as a paper of [Soft Actor-Critic](https://arxiv.org/abs/1801.01290).
 
 ### PPO
 ```sh
@@ -30,7 +31,11 @@ $ python -m examples.ppo --env Ant-v2
 ![ppo](graphs/ppo_ant.png)
 
 ### DDPG
-coming soon
+```sh
+$ python -m examples.ddpg --env Ant-v2
+```
+
+![ddpg](graphs/ddpg_ant.png)
 
 ### SAC
 coming soon
