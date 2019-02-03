@@ -11,6 +11,29 @@ To think out of the box, Web engineers spent years on studying MVC (model-view-c
 Here, I found that this MVC architecture is very useful insight even for deep reinforcement learning implementation.
 MVC provides a direction to an architecture with less dependencies, which would be nicer for unit testing.
 
+## installation
+### nvidia-docker
+You can use docker to setup and run experiments.
+```
+$ ./scripts/build.sh
+```
+
+Once you built the container, you can start a container with nvidia runtime via `./scripts/up.sh`.
+```
+$ ./scripts/up.sh
+root@a84ab59aa668:/home/app#  ls
+Dockerfile  README.md    example.confing.json  graphs            mvc      scripts  tests
+LICENSE     examples     logs                  requirements.txt  test.sh  tools
+root@a84ab59aa668:/home/app#  ls
+```
+
+### manual
+You need to install packages written in `requirements.txt` and tensorflow.
+```
+$ pip install -r requirements.txt
+$ pip install tensorflow-gpu>=1.12.0
+```
+
 
 ## algorithms
 For academic usage, we provide baseline implementations that you might need to compare.
