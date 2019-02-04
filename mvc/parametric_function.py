@@ -1,5 +1,5 @@
 import tensorflow as tf
-import tensorflow.contrib.distributions as tfd
+import tensorflow_probability as tfp
 import numpy as np
 
 
@@ -42,7 +42,7 @@ def stochastic_policy_function(fcs,
                                      initializer=tf.zeros_initializer())
             std = tf.zeros_like(mean) + tf.exp(logstd)
 
-        dist = tfd.MultivariateNormalDiag(loc=mean, scale_diag=std)
+        dist = tfp.distributions.MultivariateNormalDiag(mean, std)
     return dist
 
 

@@ -31,7 +31,7 @@ root@a84ab59aa668:/home/app#
 You need to install packages written in `requirements.txt` and tensorflow.
 ```
 $ pip install -r requirements.txt
-$ pip install tensorflow-gpu>=1.12.0
+$ pip install tensorflow-gpu tensorflow-probability-gpu
 ```
 
 
