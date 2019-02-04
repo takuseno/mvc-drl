@@ -33,6 +33,7 @@ You need to install packages written in `requirements.txt` and tensorflow.
 $ pip install -r requirements.txt
 $ pip install tensorflow-gpu tensorflow-probability-gpu
 ```
+If you have a problem of installing tensorflow probability, check tensorflow version.
 
 
 ## algorithms
