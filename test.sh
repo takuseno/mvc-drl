@@ -1,3 +1,5 @@
+set -eu
+
 # unit test
 pytest tests -p no:warnings
 
