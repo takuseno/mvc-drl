@@ -359,4 +359,4 @@ class PPONetworkTest(tf.test.TestCase):
             after = sess.run(variables)
 
         for var1, var2 in zip(before, after):
-            assert not np.all(var1 == var2)
+            assert not np.allclose(var1, var2)

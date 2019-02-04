@@ -72,7 +72,7 @@ class EvalControllerTest(TestCase):
         inputs[2] = np.zeros((4,))
         controller.step(*inputs)
 
-        network.infer.assert_called_once()
+        assert network.infer.call_count == 1
         assert metrics.get.call_count == 4
 
     def test_step_with_done(self):

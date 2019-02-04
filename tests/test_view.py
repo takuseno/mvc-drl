@@ -71,7 +71,7 @@ class ViewTest(unittest.TestCase):
 
         self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
         controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
-        controller.log.assert_called_once()
+        assert controller.log.call_count == 1
 
     def test_step_without_save(self):
         controller = DummyController()
@@ -93,7 +93,7 @@ class ViewTest(unittest.TestCase):
 
         self.assertEqual(view.step('obs', 'reward', 'done', 'info'), 'action')
         controller.step.assert_called_once_with('obs', 'reward', 'done', 'info')
-        controller.save.assert_called_once()
+        controller.save.assert_called_once_with()
 
     def test_stop_episode(self):
         controller = DummyController()
@@ -114,7 +114,7 @@ class ViewTest(unittest.TestCase):
 
         controller.is_finished = MagicMock(return_value=True)
         assert view.is_finished()
-        controller.save.assert_called_once()
+        controller.save.assert_called_once_with()
 
     def test_should_eval(self):
         controller = DummyController()

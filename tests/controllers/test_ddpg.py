@@ -135,7 +135,7 @@ class DDPGControllerTest(unittest.TestCase):
         assert buffer.size() == 1
         assert np.all(output.action == action)
         metrics.add.assert_called_once_with('step', 1)
-        noise.mock.assert_called_once()
+        assert noise.mock.call_count == 1
 
         action = controller.step(*inputs)
         assert buffer.size() == 2
@@ -176,7 +176,7 @@ class DDPGControllerTest(unittest.TestCase):
             controller.step(*inputs)
         controller.update()
 
-        network._update.assert_called_once()
+        assert network._update.call_count == 1
         controller._record_update_metrics.assert_called_once_with(critic_loss, actor_loss)
 
     def test_log(self):
@@ -217,4 +217,4 @@ class DDPGControllerTest(unittest.TestCase):
         assert buffer.add.call_args[0][1] == inputs[1]
         assert buffer.add.call_args[0][0] == 1.0
         metrics.add.assert_called_once_with('reward', inputs[3]['reward'])
-        noise.reset.assert_called_once()
+        assert noise.reset.call_count == 1
