@@ -18,7 +18,7 @@ def main(args):
         if args.label is None:
             label = path
         else:
-            label = args.label[i]
+            label = args.label[i][0]
         plt.plot(np.array(steps), np.array(values), label=label)
 
     if not args.hide_legend:

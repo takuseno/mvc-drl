@@ -36,7 +36,8 @@ def stochastic_policy_function(fcs,
                                      kernel_initializer=last_w_init,
                                      bias_initializer=last_b_init,
                                      name='logstd')
-            std = tf.exp(logstd)
+            clipped_logstd = tf.clip_by_value(logstd, -20, 2)
+            std = tf.exp(clipped_logstd)
         else:
             logstd = tf.get_variable(name='logstd', shape=[1, num_actions],
                                      initializer=tf.zeros_initializer())

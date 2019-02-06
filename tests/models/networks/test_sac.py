@@ -20,7 +20,7 @@ class BuildVLossTest(tf.test.TestCase):
         q1_t = tf.constant(nd_q1_t, dtype=tf.float32)
         q2_t = tf.constant(nd_q2_t, dtype=tf.float32)
         log_prob_t = tf.constant(nd_log_prob_t, dtype=tf.float32)
-        
+
         loss = build_v_loss(v_t, q1_t, q2_t, log_prob_t)
 
         with self.test_session() as sess:
@@ -95,10 +95,11 @@ class SACNetworkTest(tf.test.TestCase):
         self.pi_lr = np.random.random()
         self.q_lr = np.random.random()
         self.v_lr = np.random.random()
+        self.reg = np.random.random()
         self.network = SACNetwork(self.fcs, self.concat_index,
                                   self.state_shape, self.num_actions,
                                   self.gamma, self.tau, self.pi_lr,
-                                  self.q_lr, self.v_lr)
+                                  self.q_lr, self.v_lr, self.reg)
     def test_build(self):
         assert int(self.network.action.shape[0]) == self.num_actions
         assert len(self.network.value.shape) == 0

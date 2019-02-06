@@ -23,8 +23,8 @@ def main(args):
 
     # deep neural network
     network = SACNetwork(args.layers, args.concat_index,
-                          env.observation_space.shape, num_actions, args.gamma,
-                          args.tau, args.pi_lr, args.q_lr, args.v_lr)
+                         env.observation_space.shape, num_actions, args.gamma,
+                         args.tau, args.pi_lr, args.q_lr, args.v_lr, args.reg)
 
     # replay buffer
     buffer = Buffer(args.buffer_size)
@@ -38,9 +38,9 @@ def main(args):
 
     # controller
     controller = SACController(network, buffer, metrics, noise, num_actions,
-                                args.batch_size, args.final_steps,
-                                args.log_interval, args.save_interval,
-                                args.eval_interval)
+                               args.batch_size, args.final_steps,
+                               args.log_interval, args.save_interval,
+                               args.eval_interval)
 
     # view
     view = View(controller)
@@ -83,6 +83,8 @@ if __name__ == '__main__':
                         help='learning rate for q functions')
     parser.add_argument('--v-lr', type=float, default=3e-4,
                         help='learning rate for value functions')
+    parser.add_argument('--reg', type=float, default=0.001,
+                        help='policy reguralization')
     parser.add_argument('--buffer-size', type=int, default=10 ** 6,
                         help='size of replay buffer')
     parser.add_argument('--batch-size', type=int, default=256,
