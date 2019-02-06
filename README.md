@@ -45,7 +45,7 @@ For academic usage, we provide baseline implementations that you might need to c
 
 ## Ant performance
 Each point represents an average evaluation reward of 10 episodes.
-Almost same performance has been achieved as a paper of [Soft Actor-Critic](https://arxiv.org/abs/1801.01290).
+Pretty much same performance has been achieved as a paper of [Soft Actor-Critic](https://arxiv.org/abs/1801.01290).
 
 ### PPO
 ```sh
