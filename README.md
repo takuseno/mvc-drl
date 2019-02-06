@@ -38,7 +38,14 @@ $ python -m examples.ddpg --env Ant-v2
 ![ddpg](graphs/ddpg_ant.png)
 
 ### SAC
-coming soon
+```sh
+$ python -m examples.sac --env Ant-v2 --reward-scale 5
+```
+
+![sac](graphs/sac_ant.png)
+
+### comparison
+![comparison](graphs/ant_compare.png)
 
 ## unit testing
 To gurantee code quality, all functions and classes including neural networks must have unit tests.
