@@ -7,66 +7,9 @@ from mvc.models.networks.ppo import PPONetwork
 from mvc.models.networks.ppo import build_value_loss
 from mvc.models.networks.ppo import build_policy_loss
 from mvc.models.networks.ppo import build_entropy_loss
-from mvc.models.networks.ppo import ppo_function
 
 from tests.test_utils import make_tf_inpt, make_fcs
 from tests.test_utils import assert_hidden_variable_shape, assert_variable_mismatch
-
-
-def function(num_actions):
-    def func(obs):
-        with tf.variable_scope('test'):
-            out = tf.layers.dense(obs, 64)
-            loc = tf.layers.dense(out, num_actions)
-            scale = tf.layers.dense(out, num_actions)
-            dist = tfd.MultivariateNormalDiag(loc=loc, scale_diag=scale)
-
-            out = tf.layers.dense(obs, 64)
-            value = tf.layers.dense(out, 1)
-        return dist, value
-    return func
-
-
-class PPOFunctionTest(tf.test.TestCase):
-    def test_ppo_function(self):
-        inpt = make_tf_inpt()
-        fcs = make_fcs()
-        num_actions = np.random.randint(10) + 1
-
-        func = ppo_function(fcs, num_actions, 'scope')
-
-        policy, value = func(inpt)
-
-        # to check connection
-        optimizer = tf.train.AdamOptimizer(1e-4)
-        optimize_expr = optimizer.minimize(tf.reduce_mean(policy.sample(1)) + tf.reduce_mean(value))
-
-        assert int(policy.sample(1)[0].shape[0]) == int(inpt.shape[0])
-        assert int(policy.sample(1)[0].shape[1]) == num_actions
-        assert int(value.shape[0]) == int(inpt.shape[0])
-        assert int(value.shape[1]) == 1
-
-        policy_hiddens = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/policy/hiddens')
-        assert_hidden_variable_shape(policy_hiddens, inpt, fcs)
-
-        value_hiddens = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, 'scope/value/hiddens')
-        assert_hidden_variable_shape(value_hiddens, inpt, fcs)
-
-        variable = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'scope')
-
-        with self.test_session() as sess:
-            sess.run(tf.global_variables_initializer())
-
-            before = sess.run(variable)
-            before_policy_hiddens = sess.run(policy_hiddens)
-            before_value_hiddens = sess.run(value_hiddens)
-
-            sess.run(optimize_expr)
-
-            after = sess.run(variable)
-            assert_variable_mismatch(before, after)
 
 
 class BuildValueLossTest(tf.test.TestCase):
@@ -294,7 +237,7 @@ class PPONetworkTest(tf.test.TestCase):
         self.grad_clip = np.random.random()
         self.value_factor = np.random.random()
         self.entropy_factor = np.random.random()
-        self.network = PPONetwork(function(self.num_actions), self.state_shape,
+        self.network = PPONetwork([64, 64], self.state_shape,
                                   self.num_envs, self.num_actions,
                                   self.batch_size, self.epsilon, self.lr,
                                   self.grad_clip, self.value_factor,

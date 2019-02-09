@@ -7,23 +7,6 @@ from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import value_function
 
 
-def ppo_function(fcs, num_actions, scope):
-    def func(inpt):
-        def initializer(scale):
-            input_dim = int(inpt.shape[1])
-            stddev = np.sqrt(scale / input_dim)
-            return tf.random_normal_initializer(stddev=stddev)
-
-        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
-            policy = stochastic_policy_function(
-                fcs, inpt, num_actions, tf.nn.tanh, w_init=initializer(1.0),
-                last_w_init=initializer(0.01))
-            value = value_function(
-                fcs, inpt, tf.nn.tanh, initializer(1.0), initializer(1.0))
-        return policy, value
-    return func
-
-
 def build_value_loss(values, returns, old_values, epsilon, value_factor):
     assert len(values.shape) == 2 and values.shape[1] == 1
     assert len(returns.shape) == 2 and returns.shape[1] == 1
@@ -61,7 +44,7 @@ def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
 
 class PPONetwork(BaseNetwork):
     def __init__(self,
-                 function,
+                 fcs,
                  state_shape,
                  num_envs,
                  num_actions,
@@ -72,7 +55,7 @@ class PPONetwork(BaseNetwork):
                  value_factor,
                  entropy_factor):
 
-        self._build(function, state_shape, num_envs, num_actions, batch_size,
+        self._build(fcs, state_shape, num_envs, num_actions, batch_size,
                     epsilon, lr, grad_clip, value_factor, entropy_factor)
 
     def _infer(self, **kwargs):
@@ -97,7 +80,7 @@ class PPONetwork(BaseNetwork):
         return sess.run(opts, feed_dict=feed_dict)[0]
 
     def _build(self,
-               function,
+               fcs,
                state_shape,
                num_envs,
                num_actions,
@@ -124,10 +107,28 @@ class PPONetwork(BaseNetwork):
             old_values_ph = self.old_values_ph = tf.placeholder(
                 tf.float32, [batch_size], 'old_values')
 
+            def initializer(scale):
+                input_dim = int(state_shape[0])
+                stddev = np.sqrt(scale / input_dim)
+                return tf.random_normal_initializer(stddev=stddev)
+
             # network outputs for inference
-            step_dist, step_values = function(step_obs_ph)
+            step_dist = stochastic_policy_function(
+                fcs, step_obs_ph, num_actions, tf.nn.tanh,
+                w_init=initializer(1.0), last_w_init=initializer(0.01),
+                scope='pi')
+            step_values = value_function(
+                fcs, step_obs_ph, tf.nn.tanh, initializer(1.0),
+                initializer(1.0), scope='v')
+
             # network outputs for training
-            train_dist, train_values = function(train_obs_ph)
+            train_dist = stochastic_policy_function(
+                fcs, train_obs_ph, num_actions, tf.nn.tanh,
+                w_init=initializer(1.0), last_w_init=initializer(0.01),
+                scope='pi')
+            train_values = value_function(
+                fcs, train_obs_ph, tf.nn.tanh, initializer(1.0),
+                initializer(1.0), scope='v')
 
             # prepare for loss calculation
             advantages = tf.reshape(advantages_ph, [-1, 1])

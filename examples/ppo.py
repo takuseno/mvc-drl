@@ -25,12 +25,10 @@ def main(args):
 
     num_actions = env.action_space.shape[0]
 
-    function = ppo_function(args.layers, num_actions, 'ppo')
-
-    network = PPONetwork(function, env.observation_space.shape, args.num_envs,
-                         num_actions, args.batch_size, args.epsilon,
-                         args.lr, args.grad_clip, args.value_factor,
-                         args.entropy_factor)
+    network = PPONetwork(args.layers, env.observation_space.shape,
+                         args.num_envs, num_actions, args.batch_size,
+                         args.epsilon, args.lr, args.grad_clip,
+                         args.value_factor, args.entropy_factor)
 
     rollout = Rollout()
 
