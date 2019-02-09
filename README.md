@@ -1,4 +1,6 @@
 [![CircleCI](https://circleci.com/gh/takuseno/mvc-drl.svg?style=svg&circle-token=a53a3796ed3591f9f3bd411807367df4a23483c0)](https://circleci.com/gh/takuseno/mvc-drl)
+[![Maintainability](https://api.codeclimate.com/v1/badges/509948ab7059db56aacd/maintainability)](https://codeclimate.com/github/takuseno/mvc-drl/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/509948ab7059db56aacd/test_coverage)](https://codeclimate.com/github/takuseno/mvc-drl/test_coverage)
 
 # mvc-drl
 Clean deep reinforcement learning codes based on Web MVC architecture with complete unit tests
