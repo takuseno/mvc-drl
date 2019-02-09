@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 from tests.test_utils import assert_variable_mismatch, assert_variable_match
-from tests.test_utils import make_fcs
+from tests.test_utils import make_fcs, to_tf
 from mvc.models.networks.sac import SACNetwork
 from mvc.models.networks.sac import build_v_loss
 from mvc.models.networks.sac import build_q_loss
@@ -16,10 +16,10 @@ class BuildVLossTest(tf.test.TestCase):
         nd_q1_t = np.random.random((4, 1))
         nd_q2_t = np.random.random((4, 1))
         nd_log_prob_t = np.random.random((4, 1))
-        v_t = tf.constant(nd_v_t, dtype=tf.float32)
-        q1_t = tf.constant(nd_q1_t, dtype=tf.float32)
-        q2_t = tf.constant(nd_q2_t, dtype=tf.float32)
-        log_prob_t = tf.constant(nd_log_prob_t, dtype=tf.float32)
+        v_t = to_tf(nd_v_t)
+        q1_t = to_tf(nd_q1_t)
+        q2_t = to_tf(nd_q2_t)
+        log_prob_t = to_tf(nd_log_prob_t)
 
         loss = build_v_loss(v_t, q1_t, q2_t, log_prob_t)
 
@@ -36,10 +36,10 @@ class BuildQLossTest(tf.test.TestCase):
         nd_v_tp1 = np.random.random((4, 1))
         nd_dones_tp1 = np.random.randint(2, size=(4, 1))
         gamma = np.random.random()
-        q_t = tf.constant(nd_q_t, dtype=tf.float32)
-        rewards_tp1 = tf.constant(nd_rewards_tp1, dtype=tf.float32)
-        v_tp1 = tf.constant(nd_v_tp1, dtype=tf.float32)
-        dones_tp1 = tf.constant(nd_dones_tp1, dtype=tf.float32)
+        q_t = to_tf(nd_q_t)
+        rewards_tp1 = to_tf(nd_rewards_tp1)
+        v_tp1 = to_tf(nd_v_tp1)
+        dones_tp1 = to_tf(nd_dones_tp1)
 
         loss = build_q_loss(q_t, rewards_tp1, v_tp1, dones_tp1, gamma)
 
@@ -54,9 +54,9 @@ class BuildPiLossTest(tf.test.TestCase):
         nd_q1_t = np.random.random((4, 1))
         nd_q2_t = np.random.random((4, 1))
         nd_log_prob_t = np.random.random((4, 1))
-        q1_t = tf.constant(nd_q1_t, dtype=tf.float32)
-        q2_t = tf.constant(nd_q2_t, dtype=tf.float32)
-        log_prob_t = tf.constant(nd_log_prob_t, dtype=tf.float32)
+        q1_t = to_tf(nd_q1_t)
+        q2_t = to_tf(nd_q2_t)
+        log_prob_t = to_tf(nd_log_prob_t)
 
         loss = build_pi_loss(log_prob_t, q1_t, q2_t)
 

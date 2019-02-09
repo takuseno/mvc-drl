@@ -8,7 +8,7 @@ from mvc.models.networks.ppo import build_value_loss
 from mvc.models.networks.ppo import build_policy_loss
 from mvc.models.networks.ppo import build_entropy_loss
 
-from tests.test_utils import make_tf_inpt, make_fcs
+from tests.test_utils import make_tf_inpt, make_fcs, to_tf
 from tests.test_utils import assert_hidden_variable_shape, assert_variable_mismatch
 
 
@@ -18,9 +18,9 @@ class BuildValueLossTest(tf.test.TestCase):
         nd_returns = np.random.random((4, 1))
         nd_old_values = np.random.random((4, 1))
         nd_values = nd_old_values + epsilon * 0.9
-        values = tf.constant(nd_values)
-        returns = tf.constant(nd_returns)
-        old_values = tf.constant(nd_old_values)
+        values = to_tf(nd_values)
+        returns = to_tf(nd_returns)
+        old_values = to_tf(nd_old_values)
 
         loss = build_value_loss(values, returns, old_values, epsilon, 0.5)
         assert len(loss.shape) == 0
@@ -34,9 +34,9 @@ class BuildValueLossTest(tf.test.TestCase):
         nd_old_values = np.random.random((4, 1))
         nd_values = nd_old_values + epsilon * 1.1
         nd_returns = np.random.random((4, 1)) + nd_values
-        values = tf.constant(nd_values)
-        returns = tf.constant(nd_returns)
-        old_values = tf.constant(nd_old_values)
+        values = to_tf(nd_values)
+        returns = to_tf(nd_returns)
+        old_values = to_tf(nd_old_values)
 
         loss = build_value_loss(values, returns, old_values, epsilon, 0.5)
 
@@ -49,9 +49,9 @@ class BuildValueLossTest(tf.test.TestCase):
         nd_old_values = np.random.random((4, 1))
         nd_values = nd_old_values - epsilon * 1.1
         nd_returns = -np.random.random((4, 1))
-        values = tf.constant(nd_values)
-        returns = tf.constant(nd_returns)
-        old_values = tf.constant(nd_old_values)
+        values = to_tf(nd_values)
+        returns = to_tf(nd_returns)
+        old_values = to_tf(nd_old_values)
 
         loss = build_value_loss(values, returns, old_values, epsilon, 0.5)
 
@@ -59,42 +59,6 @@ class BuildValueLossTest(tf.test.TestCase):
             answer = 0.5 * np.mean((nd_returns - (nd_old_values - epsilon)) ** 2)
             assert np.allclose(sess.run(loss), answer)
 
-    def test_with_invalid_shape(self):
-        values = tf.constant(np.random.random((4)))
-        old_values = tf.constant(np.random.random((4, 1)))
-        returns = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, old_values, 0.5, 0.2)
-
-        values = tf.constant(np.random.random((4, 1)))
-        old_values = tf.constant(np.random.random((4, 1)))
-        returns = tf.constant(np.random.random((4)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, old_values, 0.5, 0.2)
-
-        values = tf.constant(np.random.random((4, 1)))
-        old_values = tf.constant(np.random.random((4)))
-        returns = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, old_values, 0.5, 0.2)
-
-        values = tf.constant(np.random.random((4, 2)))
-        old_values = tf.constant(np.random.random((4, 1)))
-        returns = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, old_values, 0.5, 0.2)
-
-        values = tf.constant(np.random.random((4, 1)))
-        old_values = tf.constant(np.random.random((4, 1)))
-        returns = tf.constant(np.random.random((4, 2)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, old_values, 0.5, 0.2)
-
-        values = tf.constant(np.random.random((4, 1)))
-        old_values = tf.constant(np.random.random((4, 2)))
-        returns = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_value_loss(values, returns, old_values, 0.5, 0.2)
 
 class BuildEntropyLossTest(tf.test.TestCase):
     def test_sccess(self):
@@ -108,6 +72,7 @@ class BuildEntropyLossTest(tf.test.TestCase):
             answer = -np.mean(0.01 * sess.run(entropy))
             assert np.allclose(sess.run(loss), answer)
 
+
 class BuildPolicyLossTest(tf.test.TestCase):
     def setUp(self):
         self.num_actions = np.random.randint(5) + 1
@@ -118,9 +83,9 @@ class BuildPolicyLossTest(tf.test.TestCase):
         nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.5 + 0.5)
         nd_advantages = np.random.random((4, 1))
 
-        log_probs = tf.constant(nd_log_probs)
-        old_log_probs = tf.constant(nd_old_log_probs)
-        advantages = tf.constant(nd_advantages)
+        log_probs = to_tf(nd_log_probs)
+        old_log_probs = to_tf(nd_old_log_probs)
+        advantages = to_tf(nd_advantages)
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
@@ -136,9 +101,9 @@ class BuildPolicyLossTest(tf.test.TestCase):
         nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.2)
         nd_advantages = np.random.random((4, 1))
 
-        log_probs = tf.constant(nd_log_probs)
-        old_log_probs = tf.constant(nd_old_log_probs)
-        advantages = tf.constant(nd_advantages)
+        log_probs = to_tf(nd_log_probs)
+        old_log_probs = to_tf(nd_old_log_probs)
+        advantages = to_tf(nd_advantages)
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
@@ -155,9 +120,9 @@ class BuildPolicyLossTest(tf.test.TestCase):
         nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.2)
         nd_advantages = -np.random.random((4, 1))
 
-        log_probs = tf.constant(nd_log_probs)
-        old_log_probs = tf.constant(nd_old_log_probs)
-        advantages = tf.constant(nd_advantages)
+        log_probs = to_tf(nd_log_probs)
+        old_log_probs = to_tf(nd_old_log_probs)
+        advantages = to_tf(nd_advantages)
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
@@ -173,9 +138,9 @@ class BuildPolicyLossTest(tf.test.TestCase):
         nd_old_log_probs = np.log(np.random.random((4, 1)) * 0.5 + 0.5)
         nd_advantages = -np.random.random((4, 1))
 
-        log_probs = tf.constant(nd_log_probs)
-        old_log_probs = tf.constant(nd_old_log_probs)
-        advantages = tf.constant(nd_advantages)
+        log_probs = to_tf(nd_log_probs)
+        old_log_probs = to_tf(nd_old_log_probs)
+        advantages = to_tf(nd_advantages)
 
         loss = build_policy_loss(log_probs, old_log_probs, advantages, 0.2)
 
@@ -186,44 +151,6 @@ class BuildPolicyLossTest(tf.test.TestCase):
         with self.test_session() as sess:
             assert np.allclose(sess.run(loss), answer)
 
-    def test_with_invalid_shape(self):
-        epsilon = np.random.random()
-
-        log_probs = tf.constant(np.random.random((4)))
-        old_log_probs = tf.constant(np.random.random((4, 1)))
-        advantages = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
-
-        log_probs = tf.constant(np.random.random((4, 1)))
-        old_log_probs = tf.constant(np.random.random((4)))
-        advantages = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
-
-        log_probs = tf.constant(np.random.random((4, 1)))
-        old_log_probs = tf.constant(np.random.random((4, 1)))
-        advantages = tf.constant(np.random.random((4)))
-        with pytest.raises(AssertionError):
-            build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
-
-        log_probs = tf.constant(np.random.random((4, 2)))
-        old_log_probs = tf.constant(np.random.random((4, 1)))
-        advantages = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
-
-        log_probs = tf.constant(np.random.random((4, 1)))
-        old_log_probs = tf.constant(np.random.random((4, 2)))
-        advantages = tf.constant(np.random.random((4, 1)))
-        with pytest.raises(AssertionError):
-            build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
-
-        log_probs = tf.constant(np.random.random((4, 1)))
-        old_log_probs = tf.constant(np.random.random((4, 1)))
-        advantages = tf.constant(np.random.random((4, 2)))
-        with pytest.raises(AssertionError):
-            build_policy_loss(log_probs, old_log_probs, advantages, epsilon)
 
 class PPONetworkTest(tf.test.TestCase):
     def setUp(self):

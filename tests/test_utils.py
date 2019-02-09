@@ -4,6 +4,10 @@ import tensorflow as tf
 from unittest.mock import MagicMock
 
 
+def to_tf(nd_array):
+    return tf.constant(nd_array, dtype=tf.float32)
+
+
 def make_tf_inpt():
     dim1 = np.random.randint(10) + 1
     dim2 = np.random.randint(10) + 1

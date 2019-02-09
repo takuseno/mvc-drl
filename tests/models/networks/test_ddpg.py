@@ -4,7 +4,7 @@ import unittest
 import pytest
 
 from tests.test_utils import assert_variable_mismatch, assert_variable_match
-from tests.test_utils import make_fcs
+from tests.test_utils import make_fcs, to_tf
 from mvc.models.networks.ddpg import build_critic_loss
 from mvc.models.networks.ddpg import build_target_update
 from mvc.models.networks.ddpg import build_optim
@@ -17,10 +17,10 @@ class BuildCriticLoss(tf.test.TestCase):
         nd_rewards_tp1 = np.random.random((4, 1))
         nd_q_tp1 = np.random.random((4, 1))
         nd_dones_tp1 = np.random.randint(2, size=(4, 1))
-        q_t = tf.constant(nd_q_t, dtype=tf.float32)
-        rewards_tp1 = tf.constant(nd_rewards_tp1, dtype=tf.float32)
-        q_tp1 = tf.constant(nd_q_tp1, dtype=tf.float32)
-        dones_tp1 = tf.constant(nd_dones_tp1, dtype=tf.float32)
+        q_t = to_tf(nd_q_t)
+        rewards_tp1 = to_tf(nd_rewards_tp1)
+        q_tp1 = to_tf(nd_q_tp1)
+        dones_tp1 = to_tf(nd_dones_tp1)
         gamma = np.random.random()
 
         loss = build_critic_loss(q_t, rewards_tp1, q_tp1, dones_tp1, gamma)
