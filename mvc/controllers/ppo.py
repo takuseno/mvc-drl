@@ -4,7 +4,7 @@ from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.controllers.base_controller import BaseController
-from mvc.util import make_batch
+from mvc.misc.batch import make_batch
 
 
 class PPOController(BaseController):

@@ -2,7 +2,7 @@ import numpy as np
 import unittest
 import pytest
 
-from mvc.util import make_batch
+from mvc.misc.batch import make_batch
 
 
 class MakeBatchTest(unittest.TestCase):
