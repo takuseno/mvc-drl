@@ -2,64 +2,9 @@ import numpy as np
 import unittest
 
 from mvc.models.buffer import Buffer
-from mvc.models.metrics.metrics import Metrics
-from mvc.models.networks.base_network import BaseNetwork
 from mvc.controllers.sac import SACController
 from unittest.mock import MagicMock
-
-
-class DummyNetwork(BaseNetwork):
-    def _infer(self, **kwargs):
-        pass
-
-    def _update(self, **kwargs):
-        pass
-
-    def _infer_arguments(self):
-        pass
-
-    def _update_arguments(self):
-        pass
-
-class DummyMetrics(Metrics):
-    def __init__(self):
-        super().__init__('test')
-
-    def register(self, name, mode, **kwargs):
-        pass
-
-    def add(self, name, value):
-        pass
-
-    def get(self, name):
-        pass
-
-    def log_metric(self):
-        pass
-
-    def log_parameters(self):
-        pass
-
-    def reset(self):
-        pass
-
-    def should_save(self):
-        pass
-
-    def save(self):
-        pass
-
-class DummyNoise:
-    def __init__(self, mock=None):
-        self.mock = mock
-
-    def __call__(self):
-        if self.mock is not None:
-            self.mock()
-        return 0.0
-
-    def reset(self):
-        pass
+from tests.test_utils import DummyNetwork, DummyNoise, DummyMetrics
 
 
 class SACControllerTest(unittest.TestCase):
