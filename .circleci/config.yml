@@ -11,4 +11,4 @@ jobs:
       - run: chmod +x ./cc-test-reporter
       - run: ./cc-test-reporter before-build
       - run: ./test.sh
-      - run: ./cc-test-reporter after-build --coverage-input-type coverage.py --output ./.coverage --exit-code $?
+      - run: ./cc-test-reporter after-build --coverage-input-type coverage.py --exit-code $? .coverage
