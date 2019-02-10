@@ -1,7 +1,7 @@
 set -eu
 
 # unit test
-pytest tests -p no:warnings
+coverage run --source=mvc -m pytest tests -p no:warnings
 
 # pep8 check
 pycodestyle mvc
