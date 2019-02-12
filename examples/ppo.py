@@ -9,7 +9,7 @@ from mvc.models.networks.ppo import PPONetwork
 from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.view import View
-from mvc.interaction import batch_interact
+from mvc.interaction import interact
 
 
 def make_envs(env_name, num_envs, reward_scale):
@@ -56,7 +56,7 @@ def main(args):
         if args.load is not None:
             saver.restore(sess, args.load)
 
-        batch_interact(env, view, eval_env, eval_view)
+        interact(env, view, eval_env, eval_view, batch=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

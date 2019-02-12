@@ -2,7 +2,7 @@ import numpy as np
 
 from unittest import TestCase
 from unittest.mock import MagicMock
-from mvc.interaction import batch_interact, step, initial_inputs, batch_loop
+from mvc.interaction import step, initial_inputs, batch_loop
 from mvc.interaction import interact, loop
 from mvc.view import View
 
@@ -108,28 +108,6 @@ class BatchLoopTest(TestCase):
         assert hook.call_count == 5
 
 
-class BatchInteractionTest(TestCase):
-    def test_loop_with_eval(self):
-        env = DummyEnv()
-        view = DummyView()
-        eval_env = DummyEnv()
-        eval_view = DummyView()
-
-        obs = make_inputs()[0]
-        eval_env.reset = env.reset = MagicMock(return_value=obs)
-        outputs = make_inputs()
-        eval_env.step = env.step = MagicMock(return_value=outputs)
-        view.is_finished = MagicMock(side_effect=lambda: env.step.call_count == 5)
-        view.should_eval = MagicMock(side_effect=lambda: env.step.call_count == 2)
-        eval_view.is_finished = MagicMock(side_effect=lambda: eval_env.step.call_count == 5)
-        eval_view.should_eval = MagicMock(side_effect=lambda: eval_env.step.call_count == 2)
-
-        batch_interact(env, view, eval_env, eval_view)
-
-        assert env.step.call_count == 5
-        assert eval_env.step.call_count == 5
-
-
 class LoopTest(TestCase):
     def test_loop(self):
         env = DummyEnv()
@@ -195,7 +173,27 @@ class InteractionTest(TestCase):
         eval_view.is_finished = MagicMock(side_effect=lambda: eval_env.step.call_count == 5)
         eval_view.should_eval = MagicMock(side_effect=lambda: eval_env.step.call_count == 2)
 
-        interact(env, view, eval_env, eval_view)
+        interact(env, view, eval_env, eval_view, batch=False)
+
+        assert env.step.call_count == 5
+        assert eval_env.step.call_count == 5
+
+    def test_batch_loop_with_eval(self):
+        env = DummyEnv()
+        view = DummyView()
+        eval_env = DummyEnv()
+        eval_view = DummyView()
+
+        obs = make_inputs()[0]
+        eval_env.reset = env.reset = MagicMock(return_value=obs)
+        outputs = make_inputs()
+        eval_env.step = env.step = MagicMock(return_value=outputs)
+        view.is_finished = MagicMock(side_effect=lambda: env.step.call_count == 5)
+        view.should_eval = MagicMock(side_effect=lambda: env.step.call_count == 2)
+        eval_view.is_finished = MagicMock(side_effect=lambda: eval_env.step.call_count == 5)
+        eval_view.should_eval = MagicMock(side_effect=lambda: eval_env.step.call_count == 2)
+
+        interact(env, view, eval_env, eval_view, batch=True)
 
         assert env.step.call_count == 5
         assert eval_env.step.call_count == 5

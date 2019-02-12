@@ -45,23 +45,14 @@ def loop(env, view, hook=None):
         view.stop_episode(obs, reward, info)
 
 
-def batch_interact(env, view, eval_env=None, eval_view=None, hook=None):
+def interact(env, view, eval_env=None, eval_view=None, hook=None, batch=False):
+    _loop = batch_loop if batch else loop
+
     def _hook(view):
         if eval_view is not None and view.should_eval():
-            batch_loop(eval_env, eval_view)
+            _loop(eval_env, eval_view)
 
         if hook is not None:
             hook(view)
 
-    batch_loop(env, view, _hook)
-
-
-def interact(env, view, eval_env=None, eval_view=None, hook=None):
-    def _hook(view):
-        if eval_view is not None and view.should_eval():
-            loop(eval_env, eval_view)
-
-        if hook is not None:
-            hook(view)
-
-    loop(env, view, _hook)
+    _loop(env, view, _hook)
