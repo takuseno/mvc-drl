@@ -5,6 +5,7 @@ from mvc.action_output import ActionOutput
 from mvc.models.networks.base_network import BaseNetwork
 from mvc.parametric_function import deterministic_policy_function
 from mvc.parametric_function import q_function
+from mvc.misc.assertion import assert_scalar
 
 
 def initializer(shape, dtype=None, partition_info=None):
@@ -14,10 +15,10 @@ def initializer(shape, dtype=None, partition_info=None):
 
 
 def build_critic_loss(q_t, rewards_tp1, q_tp1, dones_tp1, gamma):
-    assert len(q_t.shape) == 2 and q_t.shape[1] == 1
-    assert len(rewards_tp1.shape) == 2 and rewards_tp1.shape[1] == 1
-    assert len(q_tp1.shape) == 2 and q_tp1.shape[1] == 1
-    assert len(dones_tp1.shape) == 2 and dones_tp1.shape[1] == 1
+    assert_scalar(q_t)
+    assert_scalar(rewards_tp1)
+    assert_scalar(q_tp1)
+    assert_scalar(dones_tp1)
 
     target = rewards_tp1 + gamma * q_tp1 * (1.0 - dones_tp1)
     loss = tf.reduce_mean(tf.square(target - q_t))

@@ -1,27 +1,23 @@
 import numpy as np
 
 from mvc.preprocess import compute_returns, compute_gae
+from mvc.misc.assertion import assert_batch_size_match, assert_shape_length
 
 
 class Rollout:
     def __init__(self):
-        self.obs_t = []
-        self.actions_t = []
-        self.rewards_t = []
-        self.values_t = []
-        self.log_probs_t = []
-        self.terminals_t = []
+        self.flush()
 
     def add(self, obs_t, action_t, reward_t, value_t, log_prob_t, terminal_t):
-        assert obs_t.shape[0] == action_t.shape[0]
-        assert obs_t.shape[0] == reward_t.shape[0]
-        assert obs_t.shape[0] == value_t.shape[0]
-        assert obs_t.shape[0] == log_prob_t.shape[0]
-        assert obs_t.shape[0] == terminal_t.shape[0]
-        assert len(reward_t.shape) == 1
-        assert len(value_t.shape) == 1
-        assert len(log_prob_t.shape) == 1
-        assert len(terminal_t.shape) == 1
+        assert_batch_size_match(obs_t, action_t)
+        assert_batch_size_match(obs_t, reward_t)
+        assert_batch_size_match(obs_t, value_t)
+        assert_batch_size_match(obs_t, log_prob_t)
+        assert_batch_size_match(obs_t, terminal_t)
+        assert_shape_length(reward_t, 1)
+        assert_shape_length(value_t, 1)
+        assert_shape_length(log_prob_t, 1)
+        assert_shape_length(terminal_t, 1)
 
         self.obs_t.append(obs_t)
         self.actions_t.append(action_t)

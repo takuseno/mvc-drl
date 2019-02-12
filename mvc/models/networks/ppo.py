@@ -5,12 +5,13 @@ from mvc.models.networks.base_network import BaseNetwork
 from mvc.action_output import ActionOutput
 from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import value_function
+from mvc.misc.assertion import assert_scalar
 
 
 def build_value_loss(values, returns, old_values, epsilon, value_factor):
-    assert len(values.shape) == 2 and values.shape[1] == 1
-    assert len(returns.shape) == 2 and returns.shape[1] == 1
-    assert len(old_values.shape) == 2 and old_values.shape[1] == 1
+    assert_scalar(values)
+    assert_scalar(returns)
+    assert_scalar(old_values)
 
     with tf.variable_scope('value_loss'):
         clipped_diff = tf.clip_by_value(
@@ -28,9 +29,9 @@ def build_entropy_loss(dist, entropy_factor):
 
 
 def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
-    assert len(log_probs.shape) == 2 and log_probs.shape[1] == 1
-    assert len(old_log_probs.shape) == 2 and old_log_probs.shape[1] == 1
-    assert len(advantages.shape) == 2 and advantages.shape[1] == 1
+    assert_scalar(log_probs)
+    assert_scalar(old_log_probs)
+    assert_scalar(advantages)
 
     with tf.variable_scope('policy_loss'):
         ratio = tf.exp(log_probs - old_log_probs)

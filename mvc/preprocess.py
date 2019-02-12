@@ -1,16 +1,19 @@
 import numpy as np
 
+from mvc.misc.assertion import assert_type, assert_shape_match
+
+
+def _assert_inputs(rewards, terminals, bootstrap_value):
+    assert_type(rewards, np.ndarray)
+    assert_type(terminals, np.ndarray)
+    assert_shape_match(terminals, rewards)
+    if len(rewards.shape) == 2:
+        assert_type(bootstrap_value, np.ndarray)
+        assert bootstrap_value.shape[0] == rewards.shape[1]
+
 
 def compute_returns(bootstrap_value, rewards, terminals, gamma):
-    assert isinstance(rewards, np.ndarray), 'rewards must be ndarray'
-    assert isinstance(terminals, np.ndarray), 'terminals must be ndarray'
-    assert rewards.shape == terminals.shape,\
-        'rewards and terminals must have identical shape'
-    if len(rewards.shape) == 2:
-        assert isinstance(bootstrap_value, np.ndarray),\
-            'bootstrap_value must be ndarray'
-        assert bootstrap_value.shape[0] == rewards.shape[1],\
-            'bootstrap_value must have column length of rewards'
+    _assert_inputs(rewards, terminals, bootstrap_value)
 
     returns = []
     return_tp1 = bootstrap_value
@@ -23,18 +26,9 @@ def compute_returns(bootstrap_value, rewards, terminals, gamma):
 
 
 def compute_gae(bootstrap_value, rewards, values, terminals, gamma, lam):
-    assert isinstance(rewards, np.ndarray), 'rewards must be ndarray'
-    assert isinstance(values, np.ndarray), 'values must be ndarray'
-    assert isinstance(terminals, np.ndarray), 'terminals must be ndarray'
-    assert rewards.shape == values.shape,\
-        'rewards and values must have identical shape'
-    assert rewards.shape == terminals.shape,\
-        'rewards and terminals must have identical shape'
-    if len(rewards.shape) == 2:
-        assert isinstance(bootstrap_value, np.ndarray),\
-            'bootstrap_value must be ndarray'
-        assert bootstrap_value.shape[0] == rewards.shape[1],\
-            'bootstrap_value must have column length of rewards'
+    _assert_inputs(rewards, terminals, bootstrap_value)
+    assert_type(values, np.ndarray)
+    assert_shape_match(rewards, values)
 
     values = np.concatenate((values, [bootstrap_value]), axis=0)
     # compute delta

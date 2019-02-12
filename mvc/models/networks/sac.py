@@ -7,13 +7,14 @@ from mvc.parametric_function import stochastic_policy_function
 from mvc.parametric_function import q_function, value_function
 from mvc.models.networks.ddpg import build_target_update
 from mvc.models.networks.ddpg import build_optim
+from mvc.misc.assertion import assert_scalar
 
 
 def build_v_loss(v_t, q1_t, q2_t, log_prob_t):
-    assert len(v_t.shape) == 2 and v_t.shape[1] == 1
-    assert len(q1_t.shape) == 2 and q1_t.shape[1] == 1
-    assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
-    assert len(log_prob_t.shape) == 2 and log_prob_t.shape[1] == 1
+    assert_scalar(v_t)
+    assert_scalar(q1_t)
+    assert_scalar(q2_t)
+    assert_scalar(log_prob_t)
 
     q_t = tf.minimum(q1_t, q2_t)
     target = tf.stop_gradient(q_t - log_prob_t)
@@ -22,10 +23,10 @@ def build_v_loss(v_t, q1_t, q2_t, log_prob_t):
 
 
 def build_q_loss(q_t, rewards_tp1, v_tp1, dones_tp1, gamma):
-    assert len(q_t.shape) == 2 and q_t.shape[1] == 1
-    assert len(rewards_tp1.shape) == 2 and rewards_tp1.shape[1] == 1
-    assert len(v_tp1.shape) == 2 and v_tp1.shape[1] == 1
-    assert len(dones_tp1.shape) == 2 and dones_tp1.shape[1] == 1
+    assert_scalar(q_t)
+    assert_scalar(rewards_tp1)
+    assert_scalar(v_tp1)
+    assert_scalar(dones_tp1)
 
     target = tf.stop_gradient(rewards_tp1 + gamma * v_tp1 * (1.0 - dones_tp1))
     loss = 0.5 * tf.reduce_mean((target - q_t) ** 2)
@@ -33,9 +34,9 @@ def build_q_loss(q_t, rewards_tp1, v_tp1, dones_tp1, gamma):
 
 
 def build_pi_loss(log_prob_t, q1_t, q2_t):
-    assert len(log_prob_t.shape) == 2 and log_prob_t.shape[1] == 1
-    assert len(q1_t.shape) == 2 and q1_t.shape[1] == 1
-    assert len(q2_t.shape) == 2 and q2_t.shape[1] == 1
+    assert_scalar(log_prob_t)
+    assert_scalar(q1_t)
+    assert_scalar(q2_t)
 
     q_t = tf.minimum(q1_t, q2_t)
     loss = tf.reduce_mean(log_prob_t - q_t)
