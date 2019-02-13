@@ -1,6 +1,7 @@
+from collections import deque
+
 import numpy as np
 
-from collections import deque
 from mvc.models.metrics.base_metric import BaseMetric
 
 
@@ -9,7 +10,7 @@ class QueueMetric(BaseMetric):
         self.values = deque(maxlen=maxlen)
 
     def get(self):
-        if len(self.values) > 0:
+        if self.values:
             return np.mean(list(self.values))
         return 0.0
 

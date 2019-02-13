@@ -13,6 +13,10 @@ class Metrics:
         else:
             logger.set_adapter(adapter, experiment_name)
 
+        # logger interface
+        self.log_parameters = logger.log_parameters
+        self.set_model_graph = logger.set_model_graph
+
     def register(self, name, mode, **kwargs):
         if name in self.metrics:
             raise Exception(name + ' already exists')
@@ -40,12 +44,6 @@ class Metrics:
     def log_metric(self, name, step):
         self._check_name(name)
         logger.log_metric(name, self.get(name), step)
-
-    def log_parameters(self, hyper_params):
-        logger.log_parameters(hyper_params)
-
-    def set_model_graph(self, graph):
-        logger.set_model_graph(graph)
 
     def save_model(self, step):
         if self.saver is not None:

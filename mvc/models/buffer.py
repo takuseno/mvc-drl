@@ -1,6 +1,6 @@
-import numpy as np
-
 from collections import deque
+
+import numpy as np
 
 
 class Buffer:
@@ -25,10 +25,10 @@ class Buffer:
     def size(self):
         return len(self.obs_t)
 
-    def fetch(self, n):
-        assert n < self.size()
+    def fetch(self, batch_size):
+        assert batch_size < self.size()
 
-        indices = np.random.randint(self.size() - 1, size=n)
+        indices = np.random.randint(self.size() - 1, size=batch_size)
         obs_t = []
         actions_t = []
         rewards_tp1 = []

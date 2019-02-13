@@ -53,6 +53,21 @@ def build_weight_decay(scale, scope):
     return scale * weight_sum
 
 
+def squash_action(dist):
+    sampled_action = dist.sample(1)[0]
+    squashed_action = tf.nn.tanh(sampled_action)
+    diff = tf.reduce_sum(
+        tf.log(1 - squashed_action ** 2 + 1e-6), axis=1, keepdims=True)
+    log_prob = tf.reshape(dist.log_prob(sampled_action), [-1, 1]) - diff
+    return squashed_action, log_prob
+
+
+def build_policy_reg(dist, scale):
+    mean_loss = 0.5 * tf.reduce_mean(dist.mean() ** 2)
+    logstd_loss = 0.5 * tf.reduce_mean(tf.log(dist.stddev()) ** 2)
+    return scale * (mean_loss + logstd_loss)
+
+
 class SACNetwork(BaseNetwork):
     def __init__(self,
                  fcs,
@@ -137,46 +152,38 @@ class SACNetwork(BaseNetwork):
 
             # initialzier
             zeros_init = tf.zeros_initializer()
-            w_init = tf.contrib.layers.xavier_initializer()
-            last_w_init = tf.contrib.layers.xavier_initializer()
-            last_b_init = tf.contrib.layers.xavier_initializer()
+            xavier_init = tf.contrib.layers.xavier_initializer()
 
             # policy function
             pi_t = stochastic_policy_function(fcs, obs_t_ph, num_actions,
                                               tf.nn.relu, share=True,
-                                              w_init=w_init,
-                                              last_w_init=last_w_init,
-                                              last_b_init=last_b_init,
+                                              w_init=xavier_init,
+                                              last_w_init=xavier_init,
+                                              last_b_init=xavier_init,
                                               scope='pi')
-            sampled_action_t = pi_t.sample(1)[0]
-            squashed_action_t = tf.nn.tanh(sampled_action_t)
-            diff = tf.reduce_sum(
-                tf.log(1 - squashed_action_t ** 2 + 1e-6),
-                axis=1, keepdims=True)
-            log_prob_t = tf.reshape(
-                pi_t.log_prob(sampled_action_t), [-1, 1]) - diff
+            squashed_action_t, log_prob_t = squash_action(pi_t)
 
             # value function
             v_t = value_function(
-                fcs, obs_t_ph, tf.nn.relu, w_init,
-                last_w_init, zeros_init, scope='v')
+                fcs, obs_t_ph, tf.nn.relu, xavier_init,
+                xavier_init, zeros_init, scope='v')
             # target value function
             v_tp1 = value_function(
-                fcs, obs_tp1_ph, tf.nn.relu, w_init,
-                last_w_init, zeros_init, scope='target_v')
+                fcs, obs_tp1_ph, tf.nn.relu, xavier_init,
+                xavier_init, zeros_init, scope='target_v')
 
             # two q functions
             q1_t_with_pi = q_function(fcs, obs_t_ph, squashed_action_t,
-                                      concat_index, tf.nn.relu, w_init,
-                                      last_w_init, zeros_init, scope='q1')
+                                      concat_index, tf.nn.relu, xavier_init,
+                                      xavier_init, zeros_init, scope='q1')
             q1_t = q_function(fcs, obs_t_ph, actions_t_ph, concat_index,
-                              tf.nn.relu, w_init, last_w_init,
+                              tf.nn.relu, xavier_init, xavier_init,
                               zeros_init, scope='q1')
             q2_t_with_pi = q_function(fcs, obs_t_ph, squashed_action_t,
-                                      concat_index, tf.nn.relu, w_init,
-                                      last_w_init, zeros_init, scope='q2')
+                                      concat_index, tf.nn.relu, xavier_init,
+                                      xavier_init, zeros_init, scope='q2')
             q2_t = q_function(fcs, obs_t_ph, actions_t_ph, concat_index,
-                              tf.nn.relu, w_init, last_w_init,
+                              tf.nn.relu, xavier_init, xavier_init,
                               zeros_init, scope='q2')
 
             # prepare for loss
@@ -194,15 +201,12 @@ class SACNetwork(BaseNetwork):
             # policy function loss
             self.pi_loss = build_pi_loss(
                 log_prob_t, q1_t_with_pi, q2_t_with_pi)
+            # policy reguralization
+            policy_decay = build_policy_reg(pi_t, reg)
 
             # target update
             self.target_update = build_target_update(
                 'sac/v', 'sac/target_v', tau)
-
-            # policy reguralization
-            pi_mean_loss = 0.5 * tf.reduce_mean(pi_t.mean() ** 2)
-            pi_logstd_loss = 0.5 * tf.reduce_mean(tf.log(pi_t.stddev()) ** 2)
-            policy_decay = reg * (pi_mean_loss + pi_logstd_loss)
 
             # optimization
             self.v_optimize_expr = build_optim(self.v_loss, v_lr, 'sac/v')

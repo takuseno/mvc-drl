@@ -8,10 +8,10 @@ from mvc.parametric_function import q_function
 from mvc.misc.assertion import assert_scalar
 
 
-def initializer(shape, dtype=None, partition_info=None):
+def initializer(shape, **kwargs):
     fan_in = int(shape[0])
     val = 1 / np.sqrt(fan_in)
-    return tf.random_uniform(shape, -val, val, dtype=dtype)
+    return tf.random_uniform(shape, -val, val, dtype=kwargs['dtype'])
 
 
 def build_critic_loss(q_t, rewards_tp1, q_tp1, dones_tp1, gamma):
@@ -34,8 +34,8 @@ def build_target_update(src, dst, tau):
     return tf.group(*ops)
 
 
-def build_optim(loss, lr, scope):
-    optimizer = tf.train.AdamOptimizer(lr, epsilon=1e-8)
+def build_optim(loss, learning_rate, scope):
+    optimizer = tf.train.AdamOptimizer(learning_rate, epsilon=1e-8)
     variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
     optimize_expr = optimizer.minimize(loss, var_list=variables)
     return optimize_expr

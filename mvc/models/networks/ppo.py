@@ -87,7 +87,7 @@ class PPONetwork(BaseNetwork):
                num_actions,
                batch_size,
                epsilon,
-               lr,
+               learning_rate,
                grad_clip,
                value_factor,
                entropy_factor):
@@ -156,7 +156,7 @@ class PPONetwork(BaseNetwork):
             clipped_gradients, _ = tf.clip_by_global_norm(gradients, grad_clip)
             # update
             grads_and_vars = zip(clipped_gradients, network_vars)
-            optimizer = tf.train.AdamOptimizer(lr, epsilon=1e-5)
+            optimizer = tf.train.AdamOptimizer(learning_rate, epsilon=1e-5)
             self.optimize_expr = optimizer.apply_gradients(grads_and_vars)
 
             # action
