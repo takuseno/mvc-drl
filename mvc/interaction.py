@@ -29,10 +29,7 @@ def batch_loop(env, view, hook=None):
 
 def loop(env, view, hook=None):
     while True:
-        obs = env.reset()
-        reward = 0.0
-        done = False
-        info = {}
+        obs, reward, done, info = env.reset(), 0.0, False, {}
         while not done:
             obs, reward, done, info = step(env, view, obs, reward, done, info)
 
