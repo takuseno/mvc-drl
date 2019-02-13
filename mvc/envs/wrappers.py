@@ -9,19 +9,21 @@ class BatchEnvWrapper:
         self.action_space = envs[0].action_space
         self.sum_of_rewards = [0.0 for _ in envs]
 
+    def _step_single_env(self, index, action):
+        env = self.envs[index]
+        obs, reward, done, info = env.step(action[index])
+        self.sum_of_rewards[index] += reward
+        if done:
+            obs = env.reset()
+            info['reward'] = self.sum_of_rewards[index]
+            self.sum_of_rewards[index] = 0.0
+        done = 1.0 if done else 0.0
+        return obs, reward, done, info
+
     def step(self, action):
-        obs_t = []
-        rewards_t = []
-        dones_t = []
-        infos_t = []
-        for i, env in enumerate(self.envs):
-            obs, reward, done, info = env.step(action[i])
-            self.sum_of_rewards[i] += reward
-            if done:
-                obs = env.reset()
-                info['reward'] = self.sum_of_rewards[i]
-                self.sum_of_rewards[i] = 0.0
-            done = 1.0 if done else 0.0
+        obs_t, rewards_t, dones_t, infos_t = [], [], [], []
+        for i in range(len(self.envs)):
+            obs, reward, done, info = self._step_single_env(i, action[i])
             obs_t.append(obs)
             rewards_t.append(reward)
             dones_t.append(done)
