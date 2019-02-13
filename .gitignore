@@ -2,3 +2,7 @@
 config.json
 logs
 .coverage
+build
+*.xml
+*.egg*
+dist
