@@ -20,16 +20,19 @@ class EvalController(BaseController):
 
         super().__init__(metrics, None, None, None, None)
 
+    def _record_batch_rewards(self, done, info):
+        for i in range(done.shape[0]):
+            episode = self.metrics.get('eval_episode')
+            if done[i] == 1.0 and episode < self.num_episodes:
+                self.metrics.add('eval_episode', 1)
+                self.metrics.add('eval_reward', info[i]['reward'])
+
     def step(self, obs, reward, done, info):
         output = self.network.infer(obs_t=obs)
 
         # record metrics for batch training
         if isinstance(done, np.ndarray):
-            for i in range(done.shape[0]):
-                episode = self.metrics.get('eval_episode')
-                if done[i] == 1.0 and episode < self.num_episodes:
-                    self.metrics.add('eval_episode', 1)
-                    self.metrics.add('eval_reward', info[i]['reward'])
+            self._record_batch_rewards(done, info)
 
         return output.action
 
