@@ -5,16 +5,21 @@ import argparse
 import csv
 
 
+def load_csv(path):
+    with open(path, 'r') as f:
+        reader = csv.reader(f)
+        steps = []
+        values = []
+        for row in reader:
+            steps.append(row[0])
+            values.append(row[1])
+    return steps, values
+
+
 def main(args):
     sns.set()
     for i, path in enumerate(args.path):
-        with open(path, 'r') as f:
-            reader = csv.reader(f)
-            steps = []
-            values = []
-            for row in reader:
-                steps.append(row[0])
-                values.append(row[1])
+        steps, values = load_csv(path)
         if args.label is None:
             label = path
         else:
