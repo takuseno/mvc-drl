@@ -58,11 +58,10 @@ def _load_config(path):
 
 
 def set_adapter(adapter, experiment_name, config_path='config.json'):
-    config = _load_config(config_path)
-
     set_experiment_name(experiment_name)
 
     if adapter == 'visdom':
+        config = _load_config(config_path)
         SETTING['adapter'] = VisdomAdapter(
             host=config['visdom']['host'], port=config['visdom']['port'],
             environment=config['visdom']['environment'],

@@ -105,7 +105,7 @@ if __name__ == '__main__':
                         help='reward scaling')
     parser.add_argument('--name', type=str, default='experiment',
                         help='experiment name')
-    parser.add_argument('--log-adapter', type=str,
+    parser.add_argument('--log-adapter', type=str, default='tfboard',
                         help='log adapter (visdom, tfboard)')
     parser.add_argument('--save-interval', type=int, default=2048 * 50,
                         help='interval of saving parameters')

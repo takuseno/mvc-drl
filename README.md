@@ -73,6 +73,27 @@ $ python -m examples.sac --env Ant-v2 --reward-scale 5
 ### comparison
 ![comparison](graphs/ant_compare.png)
 
+## log visualization
+All logging data is saved under `logs` directory.
+Use `--log-adapter` option in example codes to switch tensorboard and visdom as visualization (default: tensorboard).
+
+### tensorboard
+```
+$ tensorboard --logdir logs
+```
+
+### visdom
+To use visdom, you need to fill host information of a visdom server.
+```
+$ mv example.config.json config.json
+$ vim config.json # fill visdom section
+```
+
+Before running experiments, start the visdom server.
+```
+$ visdom
+```
+
 ## unit testing
 To gurantee code quality, all functions and classes including neural networks must have unit tests.
 
