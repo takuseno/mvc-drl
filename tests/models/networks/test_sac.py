@@ -3,7 +3,7 @@ import numpy as np
 
 from tests.test_utils import assert_variable_mismatch, assert_variable_match
 from tests.test_utils import make_fcs, to_tf
-from mvc.models.networks.sac import SACNetwork
+from mvc.models.networks.sac import SACNetwork, SACNetworkParams
 from mvc.models.networks.sac import build_v_loss
 from mvc.models.networks.sac import build_q_loss
 from mvc.models.networks.sac import build_pi_loss
@@ -86,22 +86,25 @@ class BuildWeightDecayTest(tf.test.TestCase):
 class SACNetworkTest(tf.test.TestCase):
     def setUp(self):
         tf.reset_default_graph()
-        self.fcs = make_fcs()
-        self.concat_index = np.random.randint(len(self.fcs))
-        self.state_shape = (np.random.randint(5) + 1,)
-        self.num_actions = np.random.randint(5) + 1
-        self.gamma = np.random.random()
-        self.tau = np.random.random()
-        self.pi_lr = np.random.random()
-        self.q_lr = np.random.random()
-        self.v_lr = np.random.random()
-        self.reg = np.random.random()
-        self.network = SACNetwork(self.fcs, self.concat_index,
-                                  self.state_shape, self.num_actions,
-                                  self.gamma, self.tau, self.pi_lr,
-                                  self.q_lr, self.v_lr, self.reg)
+        fcs = make_fcs()
+        concat_index = np.random.randint(len(fcs))
+        state_shape = (np.random.randint(5) + 1,)
+        num_actions = np.random.randint(5) + 1
+        gamma = np.random.random()
+        tau = np.random.random()
+        pi_lr = np.random.random()
+        q_lr = np.random.random()
+        v_lr = np.random.random()
+        reg = np.random.random()
+        self.params = SACNetworkParams(fcs=fcs, concat_index=concat_index,
+                                       state_shape=state_shape,
+                                       num_actions=num_actions,
+                                       gamma=gamma, tau=tau, pi_lr=pi_lr,
+                                       q_lr=q_lr, v_lr=v_lr, reg=reg)
+        self.network = SACNetwork(self.params)
+
     def test_build(self):
-        assert int(self.network.action.shape[0]) == self.num_actions
+        assert int(self.network.action.shape[0]) == self.params.num_actions
         assert len(self.network.value.shape) == 0
         assert len(self.network.pi_loss.shape) == 0
         assert len(self.network.v_loss.shape) == 0
@@ -123,18 +126,18 @@ class SACNetworkTest(tf.test.TestCase):
     def test_infer(self):
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            obs = np.random.random(self.state_shape)
+            obs = np.random.random(self.params.state_shape)
             output = self.network.infer(obs_t=obs)
 
-        assert output.action.shape == (self.num_actions,)
+        assert output.action.shape == (self.params.num_actions,)
         assert len(output.log_prob.shape) == 0
         assert len(output.value.shape) == 0
 
     def test_update(self):
-        obs_t = np.random.random((32,) + self.state_shape)
-        actions_t = np.random.random((32, self.num_actions))
+        obs_t = np.random.random((32,) + self.params.state_shape)
+        actions_t = np.random.random((32, self.params.num_actions))
         rewards_tp1 = np.random.random((32,))
-        obs_tp1 = np.random.random((32,) + self.state_shape)
+        obs_tp1 = np.random.random((32,) + self.params.state_shape)
         dones_tp1 = np.random.random((32,))
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'sac')
 

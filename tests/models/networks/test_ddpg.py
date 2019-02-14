@@ -9,6 +9,7 @@ from mvc.models.networks.ddpg import build_critic_loss
 from mvc.models.networks.ddpg import build_target_update
 from mvc.models.networks.ddpg import build_optim
 from mvc.models.networks.ddpg import DDPGNetwork
+from mvc.models.networks.ddpg import DDPGNetworkParams
 
 
 class BuildCriticLoss(tf.test.TestCase):
@@ -74,20 +75,24 @@ class BuildOptimization(tf.test.TestCase):
 class DDPGNetworkTest(tf.test.TestCase):
     def setUp(self):
         tf.reset_default_graph()
-        self.fcs = make_fcs()
-        self.concat_index = np.random.randint(len(self.fcs))
-        self.state_shape = (np.random.randint(5) + 1,)
-        self.num_actions = np.random.randint(5) + 1
-        self.gamma = np.random.random()
-        self.tau = np.random.random()
-        self.actor_lr = np.random.random()
-        self.critic_lr = np.random.random()
-        self.network = DDPGNetwork(self.fcs, self.concat_index, self.state_shape,
-                                   self.num_actions, self.gamma, self.tau,
-                                   self.actor_lr, self.critic_lr)
+        fcs = make_fcs()
+        concat_index = np.random.randint(len(fcs))
+        state_shape = (np.random.randint(5) + 1,)
+        num_actions = np.random.randint(5) + 1
+        gamma = np.random.random()
+        tau = np.random.random()
+        actor_lr = np.random.random()
+        critic_lr = np.random.random()
+
+        self.params = DDPGNetworkParams(fcs=fcs, concat_index=concat_index,
+                                        state_shape=state_shape,
+                                        num_actions=num_actions, gamma=gamma,
+                                        tau=tau, actor_lr=actor_lr,
+                                        critic_lr=critic_lr)
+        self.network = DDPGNetwork(self.params)
 
     def test_build(self):
-        assert int(self.network.action.shape[1]) == self.num_actions
+        assert int(self.network.action.shape[1]) == self.params.num_actions
         assert len(self.network.value.shape) == 1
         assert len(self.network.actor_loss.shape) == 0
         assert len(self.network.critic_loss.shape) == 0
@@ -107,18 +112,18 @@ class DDPGNetworkTest(tf.test.TestCase):
     def test_infer(self):
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            obs = np.random.random(self.state_shape)
+            obs = np.random.random(self.params.state_shape)
             output = self.network.infer(obs_t=obs)
 
-        assert output.action.shape == (self.num_actions,)
+        assert output.action.shape == (self.params.num_actions,)
         assert output.log_prob is None
         assert len(output.value.shape) == 0
 
     def test_update(self):
-        obs_t = np.random.random((32,) + self.state_shape)
-        actions_t = np.random.random((32, self.num_actions))
+        obs_t = np.random.random((32,) + self.params.state_shape)
+        actions_t = np.random.random((32, self.params.num_actions))
         rewards_tp1 = np.random.random((32,))
-        obs_tp1 = np.random.random((32,) + self.state_shape)
+        obs_tp1 = np.random.random((32,) + self.params.state_shape)
         dones_tp1 = np.random.random((32,))
         variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'ddpg')
 
