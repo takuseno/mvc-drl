@@ -7,7 +7,7 @@ import gym
 from mvc.envs.wrappers import MuJoCoWrapper
 from mvc.controllers.sac import SACController
 from mvc.controllers.eval import EvalController
-from mvc.models.networks.sac import SACNetwork
+from mvc.models.networks.sac import SACNetwork, SACNetworkParams
 from mvc.models.metrics import Metrics
 from mvc.models.buffer import Buffer
 from mvc.noise import EmptyNoise
@@ -21,10 +21,15 @@ def main(args):
     eval_env = MuJoCoWrapper(gym.make(args.env))
     num_actions = env.action_space.shape[0]
 
+    # network parameters
+    params = SACNetworkParams(fcs=args.layers, concat_index=args.concat_index,
+                              state_shape=env.observation_space.shape,
+                              num_actions=num_actions, gamma=args.gamma,
+                              tau=args.tau, pi_lr=args.pi_lr, v_lr=args.v_lr,
+                              q_lr=args.q_lr, reg=args.reg)
+
     # deep neural network
-    network = SACNetwork(args.layers, args.concat_index,
-                         env.observation_space.shape, num_actions, args.gamma,
-                         args.tau, args.pi_lr, args.q_lr, args.v_lr, args.reg)
+    network = SACNetwork(params)
 
     # replay buffer
     buffer = Buffer(args.buffer_size)

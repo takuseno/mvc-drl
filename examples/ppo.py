@@ -5,7 +5,7 @@ import gym
 from mvc.envs.wrappers import BatchEnvWrapper, MuJoCoWrapper
 from mvc.controllers.ppo import PPOController
 from mvc.controllers.eval import EvalController
-from mvc.models.networks.ppo import PPONetwork
+from mvc.models.networks.ppo import PPONetwork, PPONetworkParams
 from mvc.models.metrics import Metrics
 from mvc.models.rollout import Rollout
 from mvc.view import View
@@ -17,30 +17,43 @@ def make_envs(env_name, num_envs, reward_scale):
         for _ in range(num_envs)]
 
 def main(args):
+    # environments
     env = BatchEnvWrapper(
         make_envs(args.env, args.num_envs, args.reward_scale), args.render)
     eval_env = BatchEnvWrapper(
         make_envs(args.env, args.num_envs, args.reward_scale))
-
     num_actions = env.action_space.shape[0]
 
-    network = PPONetwork(args.layers, env.observation_space.shape,
-                         args.num_envs, num_actions, args.batch_size,
-                         args.epsilon, args.lr, args.grad_clip,
-                         args.value_factor, args.entropy_factor)
+    # network parameters
+    params = PPONetworkParams(fcs=args.layers, num_actions=num_actions,
+                              state_shape=env.observation_space.shape,
+                              num_envs=args.num_envs,
+                              batch_size=args.batch_size, epsilon=args.epsilon,
+                              learning_rate=args.lr, grad_clip=args.grad_clip,
+                              value_factor=args.value_factor,
+                              entropy_factor=args.entropy_factor)
 
+    # deep neural network
+    network = PPONetwork(params)
+
+    # rollout buffer
     rollout = Rollout()
 
+    # metrics
     saver = tf.train.Saver()
     metrics = Metrics(args.name, args.log_adapter, saver)
 
+    # controller
     controller = PPOController(network, rollout, metrics, args.num_envs,
                                args.time_horizon, args.epoch, args.batch_size,
                                args.gamma, args.lam, args.final_steps,
                                args.log_interval,  args.save_interval,
                                args.eval_interval)
+
+    # view
     view = View(controller)
 
+    # evaluation
     eval_controller = EvalController(network, metrics, args.eval_episodes)
     eval_view = View(eval_controller)
 

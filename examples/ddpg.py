@@ -7,7 +7,7 @@ import gym
 from mvc.envs.wrappers import MuJoCoWrapper
 from mvc.controllers.ddpg import DDPGController
 from mvc.controllers.eval import EvalController
-from mvc.models.networks.ddpg import DDPGNetwork
+from mvc.models.networks.ddpg import DDPGNetwork, DDPGNetworkParams
 from mvc.models.metrics import Metrics
 from mvc.models.buffer import Buffer
 from mvc.noise import OrnsteinUhlenbeckActionNoise
@@ -21,10 +21,15 @@ def main(args):
     eval_env = MuJoCoWrapper(gym.make(args.env))
     num_actions = env.action_space.shape[0]
 
+    # network parameters
+    params = DDPGNetworkParams(fcs=args.layers, concat_index=args.concat_index,
+                               state_shape=env.observation_space.shape,
+                               num_actions=num_actions, gamma=args.gamma,
+                               tau=args.tau, actor_lr=args.actor_lr,
+                               critic_lr=args.critic_lr)
+
     # deep neural network
-    network = DDPGNetwork(args.layers, args.concat_index,
-                          env.observation_space.shape, num_actions, args.gamma,
-                          args.tau, args.actor_lr, args.critic_lr)
+    network = DDPGNetwork(params)
 
     # replay buffer
     buffer = Buffer(args.buffer_size)
