@@ -11,7 +11,8 @@ try:
 except ImportError:
     from pip.req import parse_requirements
 
-install_reqs = parse_requirements('requirements.txt', session=uuid.uuid1())
+with open('requirements.txt', 'r') as f:
+    packages = f.readlines()
 
 here = path.abspath(path.dirname(__file__))
 
@@ -21,6 +22,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='mvc',
     version='1.1.0',
+    python_requires='>=3.5',
+    install_requires=packages,
     description='Cleanest Deep Reinforcement Learning Implementation Based on Web MVC',
     long_description=long_description,
     long_description_content_type='text/markdown',
