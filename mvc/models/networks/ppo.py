@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 import numpy as np
 import tensorflow as tf
 
@@ -43,21 +45,16 @@ def build_policy_loss(log_probs, old_log_probs, advantages, epsilon):
     return loss
 
 
-class PPONetwork(BaseNetwork):
-    def __init__(self,
-                 fcs,
-                 state_shape,
-                 num_envs,
-                 num_actions,
-                 batch_size,
-                 epsilon,
-                 lr,
-                 grad_clip,
-                 value_factor,
-                 entropy_factor):
+PPONetworkParams = namedtuple(
+    'PPONetworkParams', ('fcs', 'state_shape', 'num_envs', 'num_actions',
+                         'batch_size', 'epsilon', 'learning_rate', 'grad_clip',
+                         'value_factor', 'entropy_factor'))
 
-        self._build(fcs, state_shape, num_envs, num_actions, batch_size,
-                    epsilon, lr, grad_clip, value_factor, entropy_factor)
+
+class PPONetwork(BaseNetwork):
+    def __init__(self, params):
+
+        self._build(params)
 
     def _infer(self, **kwargs):
         feed_dict = {
@@ -80,70 +77,61 @@ class PPONetwork(BaseNetwork):
         opts = [self.loss, self.optimize_expr]
         return sess.run(opts, feed_dict=feed_dict)[0]
 
-    def _build(self,
-               fcs,
-               state_shape,
-               num_envs,
-               num_actions,
-               batch_size,
-               epsilon,
-               learning_rate,
-               grad_clip,
-               value_factor,
-               entropy_factor):
+    def _build(self, params):
         with tf.variable_scope('ppo', reuse=tf.AUTO_REUSE):
             # placeholers
-            step_obs_ph = self.step_obs_ph = tf.placeholder(
-                tf.float32, [num_envs] + list(state_shape), name='step_obs')
-            train_obs_ph = self.train_obs_ph = tf.placeholder(
-                tf.float32, [batch_size] + list(state_shape), name='train_obs')
-            returns_ph = self.returns_ph = tf.placeholder(
-                tf.float32, [batch_size], name='returns')
-            advantages_ph = self.advantages_ph = tf.placeholder(
-                tf.float32, [batch_size], name='advantages')
-            actions_ph = self.actions_ph = tf.placeholder(
-                tf.float32, [batch_size, num_actions], name='action')
-            old_log_probs_ph = self.old_log_probs_ph = tf.placeholder(
-                tf.float32, [batch_size], name='old_log_prob')
-            old_values_ph = self.old_values_ph = tf.placeholder(
-                tf.float32, [batch_size], 'old_values')
+            self.step_obs_ph = tf.placeholder(
+                tf.float32, [params.num_envs] + list(params.state_shape),
+                name='step_obs')
+            self.train_obs_ph = tf.placeholder(
+                tf.float32, [params.batch_size] + list(params.state_shape),
+                name='train_obs')
+            self.returns_ph = tf.placeholder(
+                tf.float32, [params.batch_size], name='returns')
+            self.advantages_ph = tf.placeholder(
+                tf.float32, [params.batch_size], name='advantages')
+            self.actions_ph = tf.placeholder(
+                tf.float32, [params.batch_size, params.num_actions],
+                name='action')
+            self.old_log_probs_ph = tf.placeholder(
+                tf.float32, [params.batch_size], name='old_log_prob')
+            self.old_values_ph = tf.placeholder(
+                tf.float32, [params.batch_size], 'old_values')
 
             def initializer(scale):
-                input_dim = int(state_shape[0])
+                input_dim = int(params.state_shape[0])
                 stddev = np.sqrt(scale / input_dim)
                 return tf.random_normal_initializer(stddev=stddev)
 
             # network outputs for inference
             step_dist = stochastic_policy_function(
-                fcs, step_obs_ph, num_actions, tf.nn.tanh,
+                params.fcs, self.step_obs_ph, params.num_actions, tf.nn.tanh,
                 w_init=initializer(1.0), last_w_init=initializer(0.01),
                 scope='pi')
             step_values = value_function(
-                fcs, step_obs_ph, tf.nn.tanh, initializer(1.0),
+                params.fcs, self.step_obs_ph, tf.nn.tanh, initializer(1.0),
                 initializer(1.0), scope='v')
 
             # network outputs for training
             train_dist = stochastic_policy_function(
-                fcs, train_obs_ph, num_actions, tf.nn.tanh,
+                params.fcs, self.train_obs_ph, params.num_actions, tf.nn.tanh,
                 w_init=initializer(1.0), last_w_init=initializer(0.01),
                 scope='pi')
             train_values = value_function(
-                fcs, train_obs_ph, tf.nn.tanh, initializer(1.0),
+                params.fcs, self.train_obs_ph, tf.nn.tanh, initializer(1.0),
                 initializer(1.0), scope='v')
 
-            # prepare for loss calculation
-            advantages = tf.reshape(advantages_ph, [-1, 1])
-            returns = tf.reshape(returns_ph, [-1, 1])
-            old_values = tf.reshape(old_values_ph, [-1, 1])
-            old_log_probs = tf.reshape(old_log_probs_ph, [-1, 1])
-            log_probs = tf.reshape(train_dist.log_prob(actions_ph), [-1, 1])
-
             # individual loss
-            value_loss = build_value_loss(train_values, returns, old_values,
-                                          epsilon, value_factor)
-            entropy_loss = build_entropy_loss(train_dist, entropy_factor)
-            policy_loss = build_policy_loss(log_probs, old_log_probs,
-                                            advantages, epsilon)
+            value_loss = build_value_loss(
+                train_values, tf.reshape(self.returns_ph, [-1, 1]),
+                tf.reshape(self.old_values_ph, [-1, 1]), params.epsilon,
+                params.value_factor)
+            entropy_loss = build_entropy_loss(
+                train_dist, params.entropy_factor)
+            policy_loss = build_policy_loss(
+                tf.reshape(train_dist.log_prob(self.actions_ph), [-1, 1]),
+                tf.reshape(self.old_log_probs_ph, [-1, 1]),
+                tf.reshape(self.advantages_ph, [-1, 1]), params.epsilon)
             # final loss
             self.loss = value_loss + policy_loss + entropy_loss
 
@@ -152,12 +140,14 @@ class PPONetwork(BaseNetwork):
                 tf.GraphKeys.TRAINABLE_VARIABLES, 'ppo')
 
             # gradients
-            gradients = tf.gradients(self.loss, network_vars)
-            clipped_gradients, _ = tf.clip_by_global_norm(gradients, grad_clip)
+            gradients, _ = tf.clip_by_global_norm(
+                tf.gradients(self.loss, network_vars), params.grad_clip)
+
             # update
-            grads_and_vars = zip(clipped_gradients, network_vars)
-            optimizer = tf.train.AdamOptimizer(learning_rate, epsilon=1e-5)
-            self.optimize_expr = optimizer.apply_gradients(grads_and_vars)
+            optimizer = tf.train.AdamOptimizer(
+                params.learning_rate, epsilon=1e-5)
+            self.optimize_expr = optimizer.apply_gradients(
+                zip(gradients, network_vars))
 
             # action
             self.action = step_dist.sample(1)[0]
