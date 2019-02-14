@@ -10,4 +10,4 @@ coverage xml
 pycodestyle mvc
 
 # additional style check
-pylint mvc
+pylint mvc || true
