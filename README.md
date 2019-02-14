@@ -38,6 +38,15 @@ $ pip install tensorflow-gpu tensorflow-probability-gpu
 If you have a problem of installing tensorflow probability, check tensorflow version.
 
 
+### install as a library
+This repository is also available on PyPI.
+You can implement extra algorithms built on top of mvc-drl.
+```
+$ pip install mvc
+```
+:warning: This reposiotry is under development so that interfaces might be frequently changed.
+
+
 ## algorithms
 For academic usage, we provide baseline implementations that you might need to compare.
 
