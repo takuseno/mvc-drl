@@ -74,7 +74,7 @@ $ python -m examples.sac --env Ant-v2 --reward-scale 5
 ![comparison](graphs/ant_compare.png)
 
 ## log visualization
-All logging data is saved under `logs` directory.
+All logging data is saved under `logs` directory as csv files and visualization tool data.
 Use `--log-adapter` option in example codes to switch tensorboard and visdom as visualization (default: tensorboard).
 
 ### tensorboard
@@ -92,6 +92,17 @@ $ vim config.json # fill visdom section
 Before running experiments, start the visdom server.
 ```
 $ visdom
+```
+
+### matplotlib
+You can visualize with `tools/plot_csv.py` by directly pointing to csv files.
+```
+$ python tools/plot_csv.py <path to csv> <path to csv> ...
+```
+By default, legends are set with paths of files.
+If you want to set them manually, use `label` option.
+```
+$ python tools/plot_csv.py --label=experiment1 --label=experiment2 <path to csv> <path to csv>
 ```
 
 ## unit testing
