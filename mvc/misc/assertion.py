@@ -7,7 +7,7 @@ def assert_shape(array, shape):
 
 
 def assert_batch_shape(array, shape):
-    assert_shape(array.shape[1:], shape)
+    assert_shape(array[0], shape)
 
 
 def assert_batch_size_match(array1, array2):

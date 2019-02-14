@@ -98,7 +98,7 @@ class DDPGControllerTest(unittest.TestCase):
         assert tuple(self.metrics.log_metric.call_args_list[1])[0] == ('critic_loss', step)
         assert tuple(self.metrics.log_metric.call_args_list[2])[0] == ('actor_loss', step)
 
-    def stop_episode(self):
+    def test_stop_episode(self):
         self.buffer.add = MagicMock()
         self.metrics.add = MagicMock()
         self.noise.reset = MagicMock()
@@ -106,9 +106,9 @@ class DDPGControllerTest(unittest.TestCase):
         inpt = make_input()
         self.controller.stop_episode(inpt[0], inpt[1], inpt[3])
 
-        assert np.all(self.buffer.add.call_args[0][3] == inpt[0])
-        assert np.all(self.buffer.add.call_args[0][2] == np.zeros())
-        assert self.buffer.add.call_args[0][1] == inpt[1]
-        assert self.buffer.add.call_args[0][0] == 1.0
+        assert np.all(self.buffer.add.call_args[0][0] == inpt[0])
+        assert np.all(self.buffer.add.call_args[0][1] == np.zeros(4))
+        assert self.buffer.add.call_args[0][2] == inpt[1]
+        assert self.buffer.add.call_args[0][3] == 1.0
         self.metrics.add.assert_called_once_with('reward', inpt[3]['reward'])
         assert self.noise.reset.call_count == 1

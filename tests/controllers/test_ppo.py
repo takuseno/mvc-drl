@@ -118,3 +118,14 @@ class TestPPOController:
         assert np.allclose(self.controller.update(), loss)
         assert self.rollout.size() == 0
         assert self.network._update.call_count == 128 * 4 * 4 // 32
+
+    def test_log(self):
+        step = np.random.randint(100)
+        self.metrics.get = MagicMock(return_value=step)
+        self.metrics.log_metric = MagicMock()
+
+        self.controller.log()
+
+        self.metrics.get.assert_called_once_with('step')
+        assert tuple(self.metrics.log_metric.call_args_list[0])[0] == ('reward', step)
+        assert tuple(self.metrics.log_metric.call_args_list[1])[0] == ('loss', step)

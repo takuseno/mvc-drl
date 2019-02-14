@@ -123,3 +123,6 @@ class TestEvalController:
         self.metrics.save_model = MagicMock()
         self.controller.save()
         self.metrics.save_model.assert_not_called()
+
+    def test_should_eval(self):
+        assert not self.controller.should_eval()
