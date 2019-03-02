@@ -1,6 +1,8 @@
 [![CircleCI](https://circleci.com/gh/takuseno/mvc-drl.svg?style=svg&circle-token=a53a3796ed3591f9f3bd411807367df4a23483c0)](https://circleci.com/gh/takuseno/mvc-drl)
 [![Maintainability](https://api.codeclimate.com/v1/badges/509948ab7059db56aacd/maintainability)](https://codeclimate.com/github/takuseno/mvc-drl/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/509948ab7059db56aacd/test_coverage)](https://codeclimate.com/github/takuseno/mvc-drl/test_coverage)
+[![Job Status](https://inspecode.rocro.com/badges/github.com/takuseno/mvc-drl/status?token=CCr2Hv5DZj1j9jMjT0RZy2VnL24IvObufIUMR9NJtl8)](https://inspecode.rocro.com/jobs/github.com/takuseno/mvc-drl/latest?completed=true)
+[![Report](https://inspecode.rocro.com/badges/github.com/takuseno/mvc-drl/report?token=CCr2Hv5DZj1j9jMjT0RZy2VnL24IvObufIUMR9NJtl8&branch=master)](https://inspecode.rocro.com/reports/github.com/takuseno/mvc-drl/branch/master/summary)
 
 # mvc-drl
 Clean deep reinforcement learning codes based on Web MVC architecture with complete unit tests
