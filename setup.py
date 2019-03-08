@@ -21,7 +21,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='mvc',
-    version='1.1.0',
+    version='1.1.1',
     python_requires='>=3.5',
     install_requires=packages,
     description='Cleanest Deep Reinforcement Learning Implementation Based on Web MVC',
