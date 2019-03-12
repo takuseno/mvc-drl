@@ -7,3 +7,4 @@ pylint==2.2.2
 pycodestyle==2.4.0
 gym==0.11.0
 coverage==4.5.2
+pybullet==2.4.8

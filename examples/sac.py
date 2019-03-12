@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import gym
+import pybullet_envs
 
 
 from mvc.envs.wrappers import MuJoCoWrapper
