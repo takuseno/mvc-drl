@@ -2,9 +2,9 @@ import numpy as np
 
 
 class BatchEnvWrapper:
-    def __init__(self, envs, render=False):
+    def __init__(self, envs, is_rendering=False):
         self.envs = envs
-        self.render = render
+        self.is_rendering = is_rendering
         self.observation_space = envs[0].observation_space
         self.action_space = envs[0].action_space
         self.sum_of_rewards = [0.0 for _ in envs]
@@ -28,7 +28,7 @@ class BatchEnvWrapper:
             rewards_t.append(reward)
             dones_t.append(done)
             infos_t.append(info)
-        if self.render:
+        if self.is_rendering:
             self.envs[0].render()
         return np.array(obs_t), np.array(rewards_t), np.array(dones_t), infos_t
 
@@ -40,19 +40,19 @@ class BatchEnvWrapper:
 
 
 class MuJoCoWrapper:
-    def __init__(self, env, reward_scale=1.0, render=False):
+    def __init__(self, env, reward_scale=1.0, is_rendering=False):
         self.env = env
         self.action_space = env.action_space
         self.observation_space = env.observation_space
         self.reward_scale = reward_scale
-        self.render = render
+        self.is_rendering = is_rendering
         self.sum_of_rewards = 0.0
 
     def step(self, action):
         high = self.action_space.high
         obs, reward, done, info = self.env.step(action * high)
 
-        if self.render:
+        if self.is_rendering:
             self.env.render()
 
         self.sum_of_rewards += reward
