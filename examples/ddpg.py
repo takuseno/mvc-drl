@@ -19,7 +19,9 @@ from mvc.interaction import interact
 def main(args):
     # environment
     env = MuJoCoWrapper(gym.make(args.env), args.reward_scale, args.render)
+    env.seed(args.seed)
     eval_env = MuJoCoWrapper(gym.make(args.env))
+    eval_env.seed(args.seed)
     num_actions = env.action_space.shape[0]
 
     # network parameters
@@ -109,5 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', type=str, help='path to model file')
     parser.add_argument('--render', action='store_true',
                         help='show rendered frames')
+    parser.add_argument('--seed', type=int, default=0,
+                        help='Random seed of environment')
     args = parser.parse_args()
     main(args)

@@ -21,8 +21,10 @@ def main(args):
     # environments
     env = BatchEnvWrapper(
         make_envs(args.env, args.num_envs, args.reward_scale), args.render)
+    env.seed(args.seed)
     eval_env = BatchEnvWrapper(
         make_envs(args.env, args.num_envs, args.reward_scale))
+    eval_env.seed(args.seed)
     num_actions = env.action_space.shape[0]
 
     # network parameters
@@ -117,5 +119,7 @@ if __name__ == '__main__':
                         help='the number of evaluation episode')
     parser.add_argument('--render', action='store_true',
                         help='show frames of environment')
+    parser.add_argument('--seed', type=int, default=0,
+                        help='Random seed of environment')
     args = parser.parse_args()
     main(args)

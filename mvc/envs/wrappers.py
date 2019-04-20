@@ -38,6 +38,10 @@ class BatchEnvWrapper:
             obs_t.append(env.reset())
         return np.array(obs_t)
 
+    def seed(self, val):
+        for env in self.envs:
+            env.seed(val)
+
 
 class MuJoCoWrapper:
     def __init__(self, env, reward_scale=1.0, is_rendering=False):
@@ -67,3 +71,6 @@ class MuJoCoWrapper:
 
     def render(self, mode='human'):
         return self.env.render(mode)
+
+    def seed(self, val):
+        return self.env.seed(val)
