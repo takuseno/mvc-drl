@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import gym
 import pybullet_envs
+import roboschool
 
 
 from mvc.envs.wrappers import MuJoCoWrapper

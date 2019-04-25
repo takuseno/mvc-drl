@@ -2,6 +2,7 @@ import tensorflow as tf
 import argparse
 import gym
 import pybullet_envs
+import roboschool
 
 from mvc.envs.wrappers import BatchEnvWrapper, MuJoCoWrapper
 from mvc.controllers.ppo import PPOController

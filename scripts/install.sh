@@ -8,4 +8,4 @@ apt-get update && apt-get install -y --no-install-recommends \
     libsm6 libxext6 libxrender1 git tmux
 
 pip --no-cache-dir install -r requirements.txt
-pip --no-cache-dir install tensorflow-probability-gpu==0.5.0rc0 pybullet
+pip --no-cache-dir install tensorflow-probability-gpu==0.5.0rc0 pybullet roboschool
