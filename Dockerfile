@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     pip --no-cache-dir install -r /tmp/requirements.txt && \
-    pip --no-cache-dir install tensorflow-probability-gpu==0.5.0rc0 pybullet
+    pip --no-cache-dir install tensorflow-probability-gpu==0.5.0rc0 pybullet \
+                               roboschool
 
 WORKDIR /home/app
 
