@@ -102,7 +102,7 @@ def log_parameters(hyper_params):
 
     if SETTING['verbose']:
         for key, value in hyper_params.items():
-            LOGGER.debug('%s=%s', key, value)
+            LOGGER.info('%s=%s', key, value)
 
     _write_hyper_params(hyper_params)
 
@@ -135,7 +135,7 @@ def log_metric(name, metric, step):
         SETTING['adapter'].log_metric(name, metric, step)
 
     if SETTING['verbose']:
-        LOGGER.debug('step=%d %s=%f', step, name, metric)
+        LOGGER.info('step=%d %s=%f', step, name, metric)
 
     _write_csv(name, metric, step)
 
