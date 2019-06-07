@@ -85,6 +85,10 @@ $ python -m examples.sac --env Ant-v2 --reward-scale 5
 ![sac](graphs/sac_ant.png)
 
 ### TD3
+```sh
+$ python -m examples.td3 --env Ant-v2
+```
+
 coming soon.
 
 ### comparison
