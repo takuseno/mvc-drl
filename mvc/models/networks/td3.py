@@ -46,8 +46,8 @@ def build_actor_loss(q1_t, q2_t):
 
 TD3NetworkParams = namedtuple(
     'TD3NetworkParams', ('fcs', 'concat_index', 'state_shape', 'num_actions',
-                          'gamma', 'tau', 'actor_lr', 'critic_lr',
-                          'target_noise_sigma', 'target_noise_clip'))
+                         'gamma', 'tau', 'actor_lr', 'critic_lr',
+                         'target_noise_sigma', 'target_noise_clip'))
 
 
 class TD3Network(BaseNetwork):
