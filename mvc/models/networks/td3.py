@@ -50,6 +50,23 @@ TD3NetworkParams = namedtuple(
                          'target_noise_sigma', 'target_noise_clip'))
 
 
+last_initializer = tf.random_uniform_initializer(-3e-3, 3e-3)
+
+
+def _q_function(params, obs, action, scope):
+    return q_function(params.fcs, obs, action, params.concat_index,
+                      tf.nn.tanh, w_init=initializer,
+                      last_w_init=last_initializer,
+                      last_b_init=last_initializer, scope=scope)
+
+
+def _policy_function(params, obs, scope):
+    return deterministic_policy_function(
+        params.fcs, obs, params.num_actions, tf.nn.tanh, w_init=initializer,
+        last_w_init=last_initializer, last_b_init=last_initializer,
+        scope=scope)
+
+
 class TD3Network(BaseNetwork):
     def __init__(self, params):
         self._build(params)
@@ -105,20 +122,13 @@ class TD3Network(BaseNetwork):
             self.dones_tp1_ph = tf.placeholder(
                 tf.float32, [None], name='dones_tp1')
 
-            last_initializer = tf.random_uniform_initializer(-3e-3, 3e-3)
-
             # policy function
-            raw_policy_t = deterministic_policy_function(
-                params.fcs, self.obs_t_ph, params.num_actions, tf.nn.tanh,
-                w_init=initializer, last_w_init=last_initializer,
-                last_b_init=last_initializer, scope='actor')
+            raw_policy_t = _policy_function(params, self.obs_t_ph, 'actor')
             policy_t = tf.nn.tanh(raw_policy_t)
 
             # target policy function
-            raw_policy_tp1 = deterministic_policy_function(
-                params.fcs, self.obs_tp1_ph, params.num_actions, tf.nn.tanh,
-                w_init=initializer, last_w_init=last_initializer,
-                last_b_init=last_initializer, scope='target_actor')
+            raw_policy_tp1 = _policy_function(params, self.obs_tp1_ph,
+                                              'target_actor')
             policy_tp1 = tf.nn.tanh(raw_policy_tp1)
 
             # target policy smoothing reguralization
@@ -127,39 +137,24 @@ class TD3Network(BaseNetwork):
                 params.target_noise_clip)
 
             # first critic
-            q1_t = q_function(
-                params.fcs, self.obs_t_ph, self.actions_t_ph,
-                params.concat_index, tf.nn.tanh, w_init=initializer,
-                last_w_init=last_initializer, last_b_init=last_initializer,
-                scope='critic/1')
-            q1_t_with_actor = q_function(
-                params.fcs, self.obs_t_ph, policy_t, params.concat_index,
-                tf.nn.tanh, w_init=initializer, last_w_init=last_initializer,
-                last_b_init=last_initializer, scope='critic/1')
+            q1_t = _q_function(
+                params, self.obs_t_ph, self.actions_t_ph, 'critic/1')
+            q1_t_with_actor = _q_function(
+                params, self.obs_t_ph, policy_t, 'critic/1')
 
             # first target critic
-            q1_tp1 = q_function(
-                params.fcs, self.obs_tp1_ph, smoothed_policy_tp1,
-                params.concat_index, tf.nn.tanh, w_init=initializer,
-                last_w_init=last_initializer, last_b_init=last_initializer,
-                scope='target_critic/1')
+            q1_tp1 = _q_function(params, self.obs_tp1_ph, smoothed_policy_tp1,
+                                 'target_critic/1')
 
             # second critic
-            q2_t = q_function(
-                params.fcs, self.obs_t_ph, self.actions_t_ph,
-                params.concat_index, tf.nn.tanh, w_init=initializer,
-                last_w_init=last_initializer, last_b_init=last_initializer,
-                scope='critic/2')
-            q2_t_with_actor = q_function(
-                params.fcs, self.obs_t_ph, policy_t, params.concat_index,
-                tf.nn.tanh, w_init=initializer, last_w_init=last_initializer,
-                last_b_init=last_initializer, scope='critic/2')
+            q2_t = _q_function(
+                params, self.obs_t_ph, self.actions_t_ph, 'critic/2')
+            q2_t_with_actor = _q_function(
+                params, self.obs_t_ph, policy_t, 'critic/2')
 
             # second target critic
-            q2_tp1 = q_function(
-                params.fcs, self.obs_tp1_ph, policy_tp1, params.concat_index,
-                tf.nn.tanh, w_init=initializer, last_w_init=last_initializer,
-                last_b_init=last_initializer, scope='target_critic/2')
+            q2_tp1 = _q_function(params, self.obs_tp1_ph, smoothed_policy_tp1,
+                                 'target_critic/2')
 
             # prepare for loss calculation
             rewards_tp1 = tf.reshape(self.rewards_tp1_ph, [-1, 1])
