@@ -54,9 +54,10 @@ $ pip install mvc
 ## algorithms
 For academic usage, we provide baseline implementations that you might need to compare.
 
-- [x] Proximal Policy Optimization
-- [x] Deep Deterministic Policy Gradients
-- [x] Soft Actor-Critic
+- [x] Proximal Policy Optimization (PPO)
+- [x] Deep Deterministic Policy Gradients (DDPG)
+- [x] Soft Actor-Critic (SAC)
+- [x] Twin Delayed Deep Deterministic Policy Gradients (TD3)
 
 ## Ant performance
 Each point represents an average evaluation reward of 10 episodes.
@@ -82,6 +83,13 @@ $ python -m examples.sac --env Ant-v2 --reward-scale 5
 ```
 
 ![sac](graphs/sac_ant.png)
+
+### TD3
+```sh
+$ python -m examples.td3 --env Ant-v2
+```
+
+coming soon.
 
 ### comparison
 ![comparison](graphs/ant_compare.png)

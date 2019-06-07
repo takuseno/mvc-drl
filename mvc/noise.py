@@ -26,6 +26,18 @@ class OrnsteinUhlenbeckActionNoise:
             self.prev_x = np.zeros_like(self.mean)
 
 
+class NormalActionNoise:
+    def __init__(self, mean, sigma):
+        self.mean = mean
+        self.sigma = sigma
+
+    def __call__(self):
+        return np.random.normal(self.mean, self.sigma)
+
+    def reset(self):
+        pass
+
+
 # for evaluation and stochastic policy
 class EmptyNoise:
     def __call__(self):
