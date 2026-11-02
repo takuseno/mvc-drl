@@ -3,7 +3,7 @@ comet-ml==1.0.44
 visdom==0.1.8.6
 seaborn==0.9.0
 matplotlib==2.0.2
-pylint==2.2.2
+pylint==4.0.9
 pycodestyle==2.4.0
 gym==0.11.0
 coverage==4.5.2
